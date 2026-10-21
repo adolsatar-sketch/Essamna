@@ -1,0 +1,1 @@
+const Wall = { view(root) { root.appendChild(h(`<section class="view page"><div class="page-inner"><h1>ذكرياتنا</h1></div></section>`)); }, dump: async () => [], restore: async () => 0, wipe: async () => {} };
