@@ -45,7 +45,7 @@ const TRig = (() => {
     const rig = el.querySelector(".rig"); if(!rig) return;
     const P = {}; rig.querySelectorAll(".rp").forEach(img => P[img.dataset.p] = img);
     c.rig = { R, rig, P, ph:0, g:0, land:0, wave:0, greet:0, nod:0, shy:0, joy:0, look:0, t:Math.random()*10,
-      sk:0, skv:0, dr:0, drv:0, hd:0, hdv:0, hd2:0, hd2v:0, px:c.x, py:c.y, vx:0, vy:0, blink:2+Math.random()*3 };
+      sk:0, skv:0, dr:0, drv:0, ar:0, arv:0, hd:0, hdv:0, hd2:0, hd2v:0, px:c.x, py:c.y, vx:0, vy:0, blink:2+Math.random()*3 };
   }
   const spring = (s, key, vkey, target, k, d, dt) => { const a = (target - s[key])*k - s[vkey]*d; s[vkey] += a*dt; s[key] += s[vkey]*dt; };
   const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
@@ -79,8 +79,10 @@ const TRig = (() => {
     const joyK = bell(s.joy, 1.2), nodK = bell(s.nod, .8), shyK = bell(s.shy, 2.2), greetK = bell(s.greet, .9);
 
     // الجسم كامل: خطوة، ميلان، تنفّس، فرحة
-    const lean = clamp(lv*.08, -3, 3.5)*amp;
-    const bodyY = -bob*1.2*g + breathe*.22*amp - joyK*5*amp + (sit?3.5:0);
+    // آمنة بفستان طويل: خطوة ناعمة بدون ميلان الجسم كله (الميلان چان يخلّيها تترجرج)
+    const gown = who==="amna" || who==="pair";
+    const lean = gown ? clamp(lv*.02, -.6, .6)*amp : clamp(lv*.08, -3, 3.5)*amp;
+    const bodyY = -bob*(gown ? .55 : 1.2)*g + breathe*.18*amp - joyK*(gown ? 3 : 5)*amp + (sit?3.5:0);
     s.rig.style.transform = `translateY(${bodyY.toFixed(2)}%) rotate(${lean.toFixed(2)}deg)`;
 
     if(who==="adool"){ adoolParts(s, P, sw, g, breathe, amp, lv, dt); return; }
@@ -88,11 +90,15 @@ const TRig = (() => {
     // رجلين (عيسى والثنائي)
     if(P.legL){ const A = sit ? 0 : 5.5; tr(P.legL, {r: sit ? -2 : sw*A*g}); tr(P.legR, {r: sit ? 2 : -sw*A*g}); }
     // تنورة آمنة: تتأخر عن الحركة وترفرف شوية
-    if(P.skirt){ spring(s, "sk", "skv", clamp(-lv*.07,-2.2,2)*amp + Math.sin(ph*2)*1.1*g + Math.sin(s.t*1.1)*.25*amp, 50, 8, dt); tr(P.skirt, {k:s.sk, sx:1+bob*.006*g}); }
+    // التنورة: تتمايل من الخصر بدرجة صغيرة وتتأخر عن الحركة شوية (بدون skew يشوّه القماش)
+    if(P.skirt){ spring(s, "sk", "skv", clamp(-lv*.03,-.9,.9)*amp + Math.sin(ph)*.55*g + Math.sin(s.t*1.1)*.12*amp, 26, 7, dt); tr(P.skirt, {r:s.sk}); }
     // ذيل الحجاب
-    if(P.drape){ spring(s, "dr", "drv", clamp(-lv*.06,-1.8,1.8)*amp + Math.sin(s.t*1.3+.4)*.5*amp + Math.sin(ph*2+.8)*.7*g, 40, 6, dt); tr(P.drape, {r:s.dr, k:s.dr*.4}); }
+    if(P.drape){ spring(s, "dr", "drv", clamp(-lv*.03,-1,1)*amp + Math.sin(s.t*1.1+.4)*.35*amp + Math.sin(ph+.8)*.45*g, 22, 6, dt); tr(P.drape, {r:s.dr}); }
+    // إيدها اليمين: تنزل مرتاحة من الكتف وتتمرجح شوية ويا الخطوة، عكس الرجل
+    if(P.armR && who==="amna"){ spring(s, "ar", "arv", Math.sin(ph)*1.8*g + breathe*.25*amp - clamp(lv*.02,-.5,.5), 30, 7, dt); tr(P.armR, {r:s.ar}); }
     // يد آمنة: تلويح أو حركة خفيفة
-    if(P.arm){ const wv = s.wave>0 ? (-7 + Math.sin(s.wave*12)*4) : 0; tr(P.arm, {r: wv + breathe*.6*amp - greetK*5}); }
+    // إيدها اليسار (الطالعة لقدّام): ثابتة تقريباً، وتنرفع شوية وقت التلويح
+    if(P.arm && who==="amna"){ const wv = s.wave>0 ? (-5 + Math.sin(s.wave*10)*2.5) : 0; tr(P.arm, {r: wv + breathe*.25*amp - greetK*3}); }
     // الراس: نظرة، هزّة، خجل
     const look = s.look*amp;   // +: يميل للثاني
     const headT = clamp(lv*.04,-1.2,1.5)*amp + breathe*.35*amp - nodK*3.2 + look;

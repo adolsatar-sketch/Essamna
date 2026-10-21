@@ -42,7 +42,8 @@ def grow(m, px): return np.asarray(Image.fromarray((m * 255).astype(np.uint8)).f
 def shrink(m, px): return np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(px * 2 + 1)), dtype=np.float32) / 255
 rig = {}
 for who, parts in PARTS.items():
-    im = Image.open(os.path.join(src, f"{who}_full.png")).convert("RGBA")
+    # Amna: the body with her rebuilt right arm on its own layer (tools/amna_right_arm.py)
+    im = Image.open(os.path.join(src, "amna_full2_body.png" if who == "amna" else f"{who}_full.png")).convert("RGBA")
     rgba = np.asarray(im).astype(np.float32); alpha = rgba[:, :, 3] / 255
     x0, y0, x1, y1 = BOX[who]; cw, ch = x1 - x0, y1 - y0
     size = (round(cw * 1000 / ch), 1000)
@@ -70,13 +71,22 @@ for who, parts in PARTS.items():
             if who == "pair" and name == "skirt": lay = lay * (1 - side)
             save(name, alpha * lay * (1 - upper_taken * 0))
             top = int(np.argmax(m.any(axis=1)))
-            keep = keep * (1 - m * (rows > top + 55))   # the waist/hip band stays on the core
+            ramp = np.clip((rows - (top + 34)) / 28.0, 0, 1)   # the waist/hip band stays on the core, fading out (no hard edge to halo)
+            keep = keep * (1 - m * ramp)
         entry["parts"][name] = {"z": z, "o": [round((piv[0] - x0) / cw * 100, 2), round((piv[1] - y0) / ch * 100, 2)]}
     if who == "amna": keep = keep * (1 - mask(AMNA_HAND_OUT, 0))
     if who == "pair":  # Amna's arm stays on Isa's arm in the pair; nothing to cut
         pass
     save("core", alpha * keep)
     entry["parts"]["core"] = {"z": 3, "o": [50, 50]}
+    if who == "amna":   # her right arm hangs from the shoulder, between the body and her crossing left arm
+        armR = Image.open(os.path.join(src, "amna_full2_armR.png")).convert("RGBA")
+        armR.crop(BOX[who]).resize(size, Image.LANCZOS).save(os.path.join(out, "amna-armR.webp"), "WEBP", quality=90, method=6)
+        sx, sy = 530, 385
+        entry["parts"]["armR"] = {"z": 3.5, "o": [round((sx - x0) / cw * 100, 2), round((sy - y0) / ch * 100, 2)]}
+    # the still sprite (cards, menus): the whole character in one image
+    still = Image.open(os.path.join(src, "amna_full2.png" if who == "amna" else f"{who}_full.png")).convert("RGBA")
+    still.crop(BOX[who]).resize(size, Image.LANCZOS).save(os.path.join(out, f"{who}.webp"), "WEBP", quality=90, method=6)
     rig[who] = entry
 open(os.path.join(root, "story", "rig-data.js"), "w", encoding="utf-8").write(
     "/* يتولّد من tools/build_rig.py — نقاط الدوران لكل جزء (نسبة مئوية من الصورة). */\nconst RIG_DATA = " + json.dumps(rig, ensure_ascii=False) + ";\n")

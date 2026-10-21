@@ -111,8 +111,9 @@ for (const vp of [{ width: 390, height: 844 }, { width: 430, height: 932 }, { wi
   await p.click("[data-h=auto]");
   await p.waitForSelector(".fx-adool", { timeout: 60000 }).catch(() => {});
   const line = await p.$eval(".fx-adool p", e => e.textContent).catch(() => "");
-  const want = await p.evaluate(() => CONFIG.adoolLine);
-  ok("عدول يقول الجملة كاملة", line === want, line);
+  ok("عدول يقول الجملة حرفياً", line === "عدول يتمنالكم زواج سعيد، يارب دوم السعادة والحياة السعيدة.", line);
+  const inFrame = await p.$eval(".tc-adool .rig", e => { const r = e.getBoundingClientRect(); return !e.closest(".tc").hidden && r.width > 0 && r.left >= 0 && r.right <= innerWidth; }).catch(() => false);
+  ok("عدول داخل الكادر على الهاتف (دخل من الطرف ووگف يم عيسى وآمنة)", inFrame);
   const fits = await p.$eval(".fa-card", e => { const r = e.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && e.scrollWidth <= e.clientWidth + 1; }).catch(() => false);
   ok("بطاقة عدول مقروءة بدون قص على الهاتف", fits);
   await p.click(".fx-adool button").catch(() => {});
@@ -122,7 +123,47 @@ for (const vp of [{ width: 390, height: 844 }, { width: 430, height: 932 }, { wi
   await ctx.close();
 }
 
-/* 5) تقليل الحركة + النسخ الاحتياطي يشتغل */
+/* 5) الخط الزمني: الخطوبة مستقلة، والزفاف موعد مستقبلي، وعدول ما يطلع قبل النهاية */
+{
+  const { ctx, p } = await page({ width: 390, height: 844 });
+  await go(p, "story");
+  const T = await p.evaluate(() => {
+    const S = HIKAYAT.stations, e = S.find(s => s.id === "engagement"), w = S.find(s => s.id === "wedding");
+    const txt = s => JSON.stringify(s, (k, v) => typeof v === "function" ? v.toString() : v);
+    return { e: e && { t: e.title, d: e.dateLabel, ph: e.photos }, w: w && { t: w.title, d: w.dateLabel, ph: w.photos || [], txt: txt(w) },
+      order: S.map(s => s.id), weddingPhotos: PHOTOS.filter(x => x.st === "wedding").length };
+  });
+  ok("محطة «يوم خطوبتهم» بتاريخ 13/2/2026", T.e && T.e.t === "يوم خطوبتهم" && T.e.d === "13/2/2026", JSON.stringify(T.e));
+  ok("الخطوبة قبل عيد الحب والزفاف آخر محطة", T.order.indexOf("engagement") < T.order.indexOf("valentine") && T.order[T.order.length - 1] === "wedding", T.order.join(","));
+  ok("صور الخطوبة ما تطلع بمحطة الزفاف", T.w && !T.w.ph.some(x => T.e.ph.includes(x)) && T.weddingPhotos === 0);
+  ok("الزفاف موعد مستقبلي 30/10/2026", T.w && /الموعد المنتظر/.test(T.w.t) && /30\/10\/2026/.test(T.w.d) && /قريباً/.test(T.w.d), JSON.stringify([T.w.t, T.w.d]));
+  ok("نصوص الزفاف بلا صيغة ماضي", T.w && !/تزوّجوا|تزوجوا|صار الزفاف|ليلة الزفاف چانت|مبروك/.test(T.w.txt));
+  const map = await p.evaluate(() => ({ text: document.querySelector("#view").textContent, adool: [...document.querySelectorAll("#view img")].some(i => /adool/.test(i.src)) }));
+  ok("طريق الحكاية يعرض الخطوبة والزفاف «قريباً»", map.text.includes("يوم خطوبتهم") && map.text.includes("قريباً"));
+  ok("عدول ما يظهر بطريق الحكاية", !map.adool);
+  await go(p, "home");
+  ok("عدول ما يظهر بالرئيسية", !(await p.evaluate(() => [...document.querySelectorAll("#view img")].some(i => /adool/.test(i.src)) || !!document.querySelector("#view .tc-adool"))));
+  ok("الخط الزمني بلا أخطاء", !p.errors.length, p.errors.slice(0, 3).join(" | "));
+  await ctx.close();
+}
+
+/* 6) العروس: طبقة الإيد اليمين موجودة ومحمّلة بكل محطة تمشي بيها آمنة وحدها */
+{
+  const { ctx, p } = await page({ width: 390, height: 844 });
+  await go(p, "home");
+  await p.evaluate(() => localStorage.setItem("hk_prefs", JSON.stringify({ openAll: true })));
+  for (const id of ["palace", "story", "amnabday", "suit"]) {
+    await go(p, "story:" + id); await p.reload(); await p.waitForFunction(() => !document.getElementById("loader")); await p.waitForTimeout(1500);
+    const r = await p.evaluate(() => { const im = [...document.querySelectorAll(".tp-stage img")].filter(i => /(amna|pair)-/.test(i.src));
+      const arm = im.filter(i => /amna-armR/.test(i.src));
+      return { n: im.length, arm: arm.length, loaded: arm.every(i => i.complete && i.naturalWidth > 0), pair: im.some(i => /pair-/.test(i.src)) }; });
+    ok(`آمنة بمحطة ${id}: إيدها اليمين (طبقة armR) محمّلة`, r.arm > 0 && r.loaded, JSON.stringify(r));
+  }
+  ok("العروس بلا أخطاء", !p.errors.length, p.errors.slice(0, 3).join(" | "));
+  await ctx.close();
+}
+
+/* 7) تقليل الحركة + النسخ الاحتياطي يشتغل */
 {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, reducedMotion: "reduce" });
   const p = await ctx.newPage(); const errs = []; p.on("pageerror", e => errs.push(e.message));

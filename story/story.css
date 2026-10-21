@@ -418,6 +418,12 @@
 .g-tilewhite{background:repeating-linear-gradient(90deg,#F2EFEA 0 9em,#DEDAD2 9em 9.15em),#F2EFEA}
 .g-parquet{background:repeating-linear-gradient(90deg,#B98B5E 0 4em,#A87C52 4em 8em),#A87C52;border-top:.5em solid #C99A6A}
 .g-grassnight{background:linear-gradient(180deg,#2E3B2E 0 .6em,#1E2A22 .6em,#121A16)}
+.g-grassdusk{background:linear-gradient(180deg,#5A6A48 0 .6em,#3E4A34 .6em,#2A3024)}
+/* الزفاف المنتظر: الأضواء معلّقة بس بعدها مطفية — تنضوي لحظة بالمعاينة */
+.tp-d.unlit circle{fill:#8A7A66;animation:none;opacity:.55}
+.tp-d.unlit circle[r="6"]{opacity:0}
+.prep-lit .tp-d.unlit circle{fill:#FFE2A0;opacity:1;transition:fill .5s,opacity .5s}
+.prep-lit .tp-d.unlit circle[r="6"]{opacity:.25}
 /* أشياء متحركة */
 .tp-d.sway svg{transform-origin:50% 0;animation:hkSway 6s ease-in-out infinite}
 @keyframes hkSway{50%{transform:rotate(1.4deg)}}
@@ -522,6 +528,18 @@
 .fa-card img{position:absolute;top:-78px;width:108px;height:auto;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}
 .fa-tag{padding:0 14px;border-radius:999px;background:#B8D69C;color:#23331A;font-weight:800}
 .fa-card p{margin:0;font-size:clamp(1.15rem,4.4vw,1.4rem);line-height:1.95;font-weight:700}
+.fa-card p{direction:rtl;font-family:var(--font-b)}
+.fa-card p .w{display:inline-block;opacity:0;transform:translateY(.4em);animation:faWord .5s ease-out forwards;animation-delay:calc(var(--i)*.28s + .5s)}
+@keyframes faWord{to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.fa-card p .w{animation:none;opacity:1;transform:none}}
+/* بطاقة موعد الزفاف (مستقبلي) */
+.fx-invite{position:absolute;inset:0;z-index:70;display:grid;place-items:center;padding:16px;background:rgba(10,8,24,.55);animation:fadeIn .4s}
+.fx-invite.out{opacity:0;transition:opacity .4s}
+.fi-card{width:min(420px,100%);display:grid;justify-items:center;gap:6px;padding:22px 18px;border-radius:22px;background:linear-gradient(180deg,#FFFBF2,#F6E9CF);color:#3B2A1E;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.55),inset 0 0 0 3px #E7CB8E;animation:tpCameo .7s cubic-bezier(.2,1.4,.4,1)}
+.fi-card small{font-weight:800;color:#8E6C33;letter-spacing:.02em}
+.fi-card b{font-family:var(--font-d);font-size:clamp(1.5rem,6vw,2rem)}
+.fi-date{font-size:1.5rem;font-weight:800;direction:ltr}
+.fi-card p{margin:0 0 6px;font-weight:700}
 /* بطاقة النهاية */
 .tp-final{text-align:center;display:grid;justify-items:center;gap:6px}
 .fi-pair{width:min(200px,46vw);height:auto;margin-top:-6px;filter:drop-shadow(0 10px 14px rgba(0,0,0,.3))}

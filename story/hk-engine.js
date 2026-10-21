@@ -45,11 +45,11 @@ const StoryEngine = (() => {
     };
     const v = h(`<section class="view page sm-page noselect">
       <div class="page-inner">
-        <header class="page-head"><div><h1>طريق الحكاية</h1><p class="page-sub">إحدى عشرة محطة، من أول صدفة بالقصر الروماني لحد يوم الزواج. كل محطة مكان تمشون بيه وتلمسون تفاصيله.</p></div>
+        <header class="page-head"><div><h1>طريق الحكاية</h1><p class="page-sub">${numSpan(L.length)} محطة، من أول صدفة بالقصر الروماني لحد موعد الزفاف المنتظر. كل محطة مكان تمشون بيه وتلمسون تفاصيله.</p></div>
           <div class="row"><button class="btn ghost sm" data-set>${IC.gear} الإعدادات</button></div></header>
         <div class="sm-prog"><div class="prog"><i style="width:${doneN / L.length * 100}%"></i></div><span>${numSpan(doneN)} من ${numSpan(L.length)}</span></div>
         <ol class="sm-path">${L.map(node).join("")}
-          <li class="sm-node end ${endOpen ? "" : "locked"}"><button class="sm-btn" data-end aria-label="النهاية${endOpen ? "" : " — مقفولة"}"><span class="sm-medal adool">${endOpen ? `<img src="${TRig.still("adool")}" alt="">` : IC.lock}</span><span class="sm-txt"><small class="sm-date">بعد الرحلة</small><b>${endOpen ? "النهاية" : "النهاية مسكّرة"}</b><span>${endOpen ? "أحد يريد يگول شي…" : `تنفتح بعد كل المحطات${prefs.openAll ? "" : " والألعاب الأساسية الثلاث"}`}</span></span></button></li>
+          <li class="sm-node end ${endOpen ? "" : "locked"}"><button class="sm-btn" data-end aria-label="النهاية${endOpen ? "" : " — مقفولة"}"><span class="sm-medal adool">${endOpen ? IC.heart : IC.lock}</span><span class="sm-txt"><small class="sm-date">بعد الرحلة</small><b>${endOpen ? "النهاية" : "النهاية مسكّرة"}</b><span>${endOpen ? "أحد يريد يگول شي…" : `تنفتح بعد كل المحطات${prefs.openAll ? "" : " والألعاب الأساسية الثلاث"}`}</span></span></button></li>
         </ol>
       </div></section>`);
     root.appendChild(v);
@@ -282,7 +282,7 @@ const StoryEngine = (() => {
     /* ----- مؤثرات المشهد ----- */
     async function doFx(name, arg) {
       const f = HIKAYAT.fx[name];
-      if (f) return f({ v, stage, L, chars, getObj, updObj, deco, ctx, TAudio, wait, emote, bark, motionOK, sc, SV, camX: cam, VW, U, toastIn, fxL }, arg);
+      if (f) return f({ v, stage, L, chars, getObj, updObj, deco, ctx, TAudio, wait, emote, bark, motionOK, sc, SV, camX: cam, VW, U, toastIn, fxL, auto }, arg);
     }
     function toastIn(t, ms = 2200) { toastEl.textContent = fill(t, ctx); toastEl.hidden = false; toastEl.classList.remove("in"); void toastEl.offsetWidth; toastEl.classList.add("in"); clearTimeout(toastEl._t); toastEl._t = setTimeout(() => toastEl.hidden = true, ms); }
 
