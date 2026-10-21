@@ -7,7 +7,7 @@
 <base href="../">
 <style>
   /* أداة تطوير: تعرض شخصية وحدة كبيرة وتحرّكها بنفس كود الموقع (hk-rig.js).
-     ?who=amna&mode=idle|walk|wave|shy|joy&t=1.2&flip=1&bg=1  */
+     ?who=amna&mode=idle|walk|wave|shy|joy|look|sit|blink&t=1.2&flip=1&h=90  */
   body{margin:0;background:#2f6f8f;font:14px sans-serif;color:#fff}
   .stage{position:relative;height:100vh;display:grid;place-items:end center;overflow:hidden}
   .tc{position:relative;--h:60;font-size:1.3vh;padding-bottom:4vh}
@@ -36,6 +36,7 @@
   // محاكاة ثابتة الخطوة حتى تطلع اللقطة نفسها كل مرة
   const dt = 1 / 60; let t = 0;
   while (t < until) { if (mode === "walk") c.x += 17 * dt; TRig.update(c, dt, false); t += dt; }
+  if (mode === "blink") { c.rig.blink = 0; TRig.update(c, .085, false); }   // الجفن مسدود بنص الرمشة
   document.querySelector(".label").textContent = `${who} · ${mode} · t=${until}`;
   window.ready = true;
 </script>

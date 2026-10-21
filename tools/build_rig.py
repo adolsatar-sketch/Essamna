@@ -1,8 +1,9 @@
-"""Cuts the approved Isa/Amna character art into animation layers (one exact partition per character).
-usage: python build_rig.py <dir with isa_full.png amna_full.png pair_full.png> <repo_root>
+"""Cuts the approved Isa and Isa+Amna (pair) art into animation layers (one exact partition per character).
+Amna's SOLO rig comes from her own solo art: tools/build_amna_solo.py (this script leaves it alone).
+usage: python build_rig.py <dir with isa_full.png pair_full.png> <repo_root>
 Every part is a full-frame transparent WebP, so the rig only rotates/skews whole layers — no clip-path ghosts.
 Polygons are written in the ORIGINAL reference pixel space (1024x1536), so the pair reuses the same cuts."""
-import sys, os, json, numpy as np
+import sys, os, re, json, numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 src, root = sys.argv[1], sys.argv[2]
@@ -22,12 +23,10 @@ ISA_LEGL = I([(-2,51)] + ISA_SEAM + [(-2,101)])
 ISA_LEGR = I([(102,51)] + ISA_SEAM + [(102,101)])
 AMNA_HEAD = A([(16,-2),(64,-2),(64,9),(56,12),(50,13.2),(42,14),(34,13.6),(26,12.5),(16,11)])
 AMNA_DRAPE = A([(63,12),(102,18),(102,56),(74,56),(70,46),(66.5,40),(66,17)])
-AMNA_ARM = A([(6,26),(25,26),(30,31),(44,32),(58,33),(60,41),(40,41),(26,39.5),(6,37)])
 AMNA_SKIRT = A([(-2,39.5),(66.5,39.5),(70,46),(74,56),(102,56),(102,101),(-2,101)])
 
 PARTS = {   # name: (polygon, pivot in reference px, z)
   "isa":  {"legL":(ISA_LEGL, isa(30,52), 1), "legR":(ISA_LEGR, isa(64,52), 1), "head":(ISA_HEAD, isa(60,15), 5)},
-  "amna": {"skirt":(AMNA_SKIRT, amn(44,40), 2), "drape":(AMNA_DRAPE, amn(66,18), 4), "arm":(AMNA_ARM, amn(58,37), 4), "head":(AMNA_HEAD, amn(40,13), 5)},
   "pair": {"legL":(ISA_LEGL, isa(30,52), 1), "legR":(ISA_LEGR, isa(64,52), 1), "skirt":(AMNA_SKIRT, amn(44,40), 2),
            "drape":(AMNA_DRAPE, amn(66,18), 4), "ihead":(ISA_HEAD, isa(60,15), 5), "ahead":(AMNA_HEAD, amn(40,13), 5)},
 }
@@ -37,13 +36,11 @@ def mask(poly, feather=2.0):
     m = Image.new("L", FULL, 0); ImageDraw.Draw(m).polygon(poly, fill=255)
     return np.asarray(m.filter(ImageFilter.GaussianBlur(feather)), dtype=np.float32) / 255
 
-AMNA_HAND_OUT = A([(4,25),(24.5,25),(24.5,38.5),(4,38.5)])   # the hand sticks out past her body; nothing of the core stays behind it
 def grow(m, px): return np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(px * 2 + 1)), dtype=np.float32) / 255
 def shrink(m, px): return np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.MinFilter(px * 2 + 1)), dtype=np.float32) / 255
 rig = {}
 for who, parts in PARTS.items():
-    # Amna: the body with her rebuilt right arm on its own layer (tools/amna_right_arm.py)
-    im = Image.open(os.path.join(src, "amna_full2_body.png" if who == "amna" else f"{who}_full.png")).convert("RGBA")
+    im = Image.open(os.path.join(src, f"{who}_full.png")).convert("RGBA")
     rgba = np.asarray(im).astype(np.float32); alpha = rgba[:, :, 3] / 255
     x0, y0, x1, y1 = BOX[who]; cw, ch = x1 - x0, y1 - y0
     size = (round(cw * 1000 / ch), 1000)
@@ -74,20 +71,17 @@ for who, parts in PARTS.items():
             ramp = np.clip((rows - (top + 34)) / 28.0, 0, 1)   # the waist/hip band stays on the core, fading out (no hard edge to halo)
             keep = keep * (1 - m * ramp)
         entry["parts"][name] = {"z": z, "o": [round((piv[0] - x0) / cw * 100, 2), round((piv[1] - y0) / ch * 100, 2)]}
-    if who == "amna": keep = keep * (1 - mask(AMNA_HAND_OUT, 0))
     if who == "pair":  # Amna's arm stays on Isa's arm in the pair; nothing to cut
         pass
     save("core", alpha * keep)
     entry["parts"]["core"] = {"z": 3, "o": [50, 50]}
-    if who == "amna":   # her right arm hangs from the shoulder, between the body and her crossing left arm
-        armR = Image.open(os.path.join(src, "amna_full2_armR.png")).convert("RGBA")
-        armR.crop(BOX[who]).resize(size, Image.LANCZOS).save(os.path.join(out, "amna-armR.webp"), "WEBP", quality=90, method=6)
-        sx, sy = 530, 385
-        entry["parts"]["armR"] = {"z": 3.5, "o": [round((sx - x0) / cw * 100, 2), round((sy - y0) / ch * 100, 2)]}
     # the still sprite (cards, menus): the whole character in one image
-    still = Image.open(os.path.join(src, "amna_full2.png" if who == "amna" else f"{who}_full.png")).convert("RGBA")
+    still = Image.open(os.path.join(src, f"{who}_full.png")).convert("RGBA")
     still.crop(BOX[who]).resize(size, Image.LANCZOS).save(os.path.join(out, f"{who}.webp"), "WEBP", quality=90, method=6)
     rig[who] = entry
-open(os.path.join(root, "story", "rig-data.js"), "w", encoding="utf-8").write(
-    "/* يتولّد من tools/build_rig.py — نقاط الدوران لكل جزء (نسبة مئوية من الصورة). */\nconst RIG_DATA = " + json.dumps(rig, ensure_ascii=False) + ";\n")
+rd = os.path.join(root, "story", "rig-data.js")   # keep the "amna" entry written by build_amna_solo.py
+old = json.loads(re.search(r"const RIG_DATA = (\{.*\});", open(rd, encoding="utf-8").read(), re.S).group(1)) if os.path.exists(rd) else {}
+old.update(rig)
+open(rd, "w", encoding="utf-8").write(
+    "/* يتولّد من tools/build_rig.py (عيسى والثنائي) وtools/build_amna_solo.py (آمنة وحدها) — نقاط الدوران لكل جزء (نسبة مئوية من الصورة). */\nconst RIG_DATA = " + json.dumps(old, ensure_ascii=False) + ";\n")
 print(json.dumps(rig, indent=1))

@@ -522,16 +522,22 @@
 .fx-fireworks span svg{width:100%}
 .fx-fireworks.out{opacity:0;transition:opacity .8s}
 @keyframes hkFw{0%{transform:translate(-50%,-50%) scale(.1);opacity:1}70%{opacity:1}100%{transform:translate(-50%,-50%) scale(1.1);opacity:0}}
-.fx-adool{position:absolute;inset:0;z-index:70;display:grid;place-items:center;padding:16px;background:rgba(10,8,24,.55);animation:fadeIn .4s}
-.fx-adool.out{opacity:0;transition:opacity .45s}
-.fa-card{position:relative;width:min(520px,100%);display:grid;justify-items:center;gap:8px;padding:100px 18px 18px;margin-top:70px;border-radius:22px;background:linear-gradient(180deg,#FFFBF2,#F6E9CF);color:#3B2A1E;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.55),inset 0 0 0 3px #E7CB8E;animation:tpCameo .7s cubic-bezier(.2,1.4,.4,1)}
-.fa-card img{position:absolute;top:-78px;width:108px;height:auto;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}
-.fa-tag{padding:0 14px;border-radius:999px;background:#B8D69C;color:#23331A;font-weight:800}
-.fa-card p{margin:0;font-size:clamp(1.15rem,4.4vw,1.4rem);line-height:1.95;font-weight:700}
-.fa-card p{direction:rtl;font-family:var(--font-b)}
-.fa-card p .w{display:inline-block;opacity:0;transform:translateY(.4em);animation:faWord .5s ease-out forwards;animation-delay:calc(var(--i)*.28s + .5s)}
-@keyframes faWord{to{opacity:1;transform:none}}
-@media (prefers-reduced-motion:reduce){.fa-card p .w{animation:none;opacity:1;transform:none}}
+/* «كلمة من عدول»: فقاعة كلام داخل المشهد فوق راس عدول — الكلمات تطلع ويا حركته */
+.adool-say{position:absolute;z-index:40;width:min(calc(100% - 20px),380px);padding:10px 16px 12px;border-radius:20px;background:#FFFBF2;color:#3B2A1E;text-align:center;direction:rtl;font-family:var(--font-b);box-shadow:0 14px 34px rgba(0,0,0,.45),inset 0 0 0 2px #E7CB8E;animation:asIn .45s cubic-bezier(.2,1.3,.4,1)}
+.adool-say.out{opacity:0;transform:translateY(8px);transition:opacity .4s,transform .4s}
+.adool-say .as-name{display:inline-block;padding:0 12px;border-radius:999px;background:#B8D69C;color:#23331A;font-weight:800;font-size:.9rem}
+.adool-say p{margin:4px 0 0;font-size:clamp(1.12rem,4.6vw,1.4rem);line-height:1.9;font-weight:800}
+.adool-say .w{display:inline-block;opacity:0;transform:translateY(.35em);transition:opacity .35s,transform .35s}
+.adool-say .w.on{opacity:1;transform:none}
+.adool-say .btn{margin-top:6px}
+.as-tail{position:absolute;top:calc(100% - 1px);left:calc(var(--tx,50%) - 10px);width:20px;height:var(--th,12px);background:#FFFBF2;clip-path:polygon(0 0,100% 0,55% 100%);filter:drop-shadow(0 2px 2px rgba(0,0,0,.25))}
+@keyframes asIn{from{opacity:0;transform:translateY(10px) scale(.96)}}
+@media (prefers-reduced-motion:reduce){.adool-say,.adool-say .w{animation:none;transition:none;opacity:1;transform:none}}
+/* الانتقال من آخر محطة للفصل الإضافي */
+.tp-trans{position:absolute;inset:0;z-index:80;display:grid;place-content:center;justify-items:center;gap:6px;background:#0B0A1A;color:#F6E3B8;opacity:0;transition:opacity 1.1s ease;text-align:center;padding:16px}
+.tp-trans.in{opacity:1}
+.tp-trans small{font-weight:800;letter-spacing:.04em;color:#CDB894}
+.tp-trans b{font-family:var(--font-d);font-size:clamp(2rem,9vw,3.2rem);font-weight:700}
 /* بطاقة موعد الزفاف (مستقبلي) */
 .fx-invite{position:absolute;inset:0;z-index:70;display:grid;place-items:center;padding:16px;background:rgba(10,8,24,.55);animation:fadeIn .4s}
 .fx-invite.out{opacity:0;transition:opacity .4s}

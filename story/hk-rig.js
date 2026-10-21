@@ -32,7 +32,7 @@ const TRig = (() => {
   function html(who){
     const R = RIGS[who];
     const parts = Object.entries(R.parts).sort((a,b)=>a[1].z-b[1].z).map(([k,p]) => R.layered
-      ? `<img class="rp rp-${k}" data-p="${k}" src="${R.src(k)}" alt="" draggable="false" decoding="async" style="transform-origin:${p.o[0]}% ${p.o[1]}%">`
+      ? `<img class="rp rp-${k}" data-p="${k}" src="${R.src(k)}" alt="" draggable="false" decoding="async" style="transform-origin:${p.o[0]}% ${p.o[1]}%${p.blink ? ";transform:scaleY(0);opacity:0" : ""}">`
       : `<img class="rp rp-${k}" data-p="${k}" src="${R.src()}" alt="" draggable="false" decoding="async" style="clip-path:${poly(p.c)};-webkit-clip-path:${poly(p.c)};transform-origin:${p.o[0]}% ${p.o[1]}%;${p.hidden?"opacity:0;":""}${p.mirror?`transform:translate(${p.mirror.dx}%,${p.mirror.dy}%) scale(${-p.mirror.sx},1);`:""}">`).join("");
     return `<div class="rig rig-${who}" style="aspect-ratio:${R.ar}">${parts}</div>`;
   }
@@ -45,7 +45,7 @@ const TRig = (() => {
     const rig = el.querySelector(".rig"); if(!rig) return;
     const P = {}; rig.querySelectorAll(".rp").forEach(img => P[img.dataset.p] = img);
     c.rig = { R, rig, P, ph:0, g:0, land:0, wave:0, greet:0, nod:0, shy:0, joy:0, look:0, t:Math.random()*10,
-      sk:0, skv:0, dr:0, drv:0, ar:0, arv:0, hd:0, hdv:0, hd2:0, hd2v:0, px:c.x, py:c.y, vx:0, vy:0, blink:2+Math.random()*3 };
+      sk:0, skv:0, dr:0, drv:0, ar:0, arv:0, hd:0, hdv:0, hd2:0, hd2v:0, px:c.x, py:c.y, vx:0, vy:0, blink:2+Math.random()*3, bt:0 };
   }
   const spring = (s, key, vkey, target, k, d, dt) => { const a = (target - s[key])*k - s[vkey]*d; s[vkey] += a*dt; s[key] += s[vkey]*dt; };
   const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
@@ -90,24 +90,37 @@ const TRig = (() => {
     // رجلين (عيسى والثنائي)
     if(P.legL){ const A = sit ? 0 : 5.5; tr(P.legL, {r: sit ? -2 : sw*A*g}); tr(P.legR, {r: sit ? 2 : -sw*A*g}); }
     // تنورة آمنة: تتأخر عن الحركة وترفرف شوية
-    // التنورة: تتمايل من الخصر بدرجة صغيرة وتتأخر عن الحركة شوية (بدون skew يشوّه القماش)
+    if(who==="amna"){ amnaParts(s, P, ph, g, breathe, amp, lv, dt, nodK, shyK); return; }
+    // التنورة (الثنائي): تتمايل من الخصر بدرجة صغيرة وتتأخر عن الحركة شوية
     if(P.skirt){ spring(s, "sk", "skv", clamp(-lv*.03,-.9,.9)*amp + Math.sin(ph)*.55*g + Math.sin(s.t*1.1)*.12*amp, 26, 7, dt); tr(P.skirt, {r:s.sk}); }
     // ذيل الحجاب
     if(P.drape){ spring(s, "dr", "drv", clamp(-lv*.03,-1,1)*amp + Math.sin(s.t*1.1+.4)*.35*amp + Math.sin(ph+.8)*.45*g, 22, 6, dt); tr(P.drape, {r:s.dr}); }
-    // إيدها اليمين: تنزل مرتاحة من الكتف وتتمرجح شوية ويا الخطوة، عكس الرجل
-    if(P.armR && who==="amna"){ spring(s, "ar", "arv", Math.sin(ph)*1.8*g + breathe*.25*amp - clamp(lv*.02,-.5,.5), 30, 7, dt); tr(P.armR, {r:s.ar}); }
-    // يد آمنة: تلويح أو حركة خفيفة
-    // إيدها اليسار (الطالعة لقدّام): ثابتة تقريباً، وتنرفع شوية وقت التلويح
-    if(P.arm && who==="amna"){ const wv = s.wave>0 ? (-5 + Math.sin(s.wave*10)*2.5) : 0; tr(P.arm, {r: wv + breathe*.25*amp - greetK*3}); }
     // الراس: نظرة، هزّة، خجل
     const look = s.look*amp;   // +: يميل للثاني
     const headT = clamp(lv*.04,-1.2,1.5)*amp + breathe*.35*amp - nodK*3.2 + look;
     if(who==="isa"){ spring(s, "hd", "hdv", headT, 40, 8, dt); tr(P.head, {r:s.hd}); }
-    if(who==="amna"){ spring(s, "hd", "hdv", headT + shyK*4.5, 40, 8, dt); tr(P.head, {r:s.hd}); }
     if(who==="pair"){
       spring(s, "hd", "hdv", headT + joyK*1.5, 40, 8, dt); tr(P.ihead, {r:s.hd});
       spring(s, "hd2", "hd2v", -headT*.8 - look*1.6 + shyK*-3 + Math.sin(s.t*1.5+1)*.3*amp, 40, 8, dt); tr(P.ahead, {r:s.hd2});
     }
+  }
+  /* آمنة وحدها (صورتها المنفردة المعتمدة): الإيدين والجسم طبقة وحدة ما تنقص أبداً.
+     الحركة: رمش، تنفّس خفيف، ميلان راس صغير، وقماش (ذيل الحجاب والتنورة) يتمايل. بدون أي مطّ للصورة. */
+  function amnaParts(s, P, ph, g, breathe, amp, lv, dt, nodK, shyK){
+    const greetK = s.wave>0 ? Math.sin(Math.min(1, s.wave)*Math.PI) : 0;   // «تلويح» آمنة = سلام بالراس
+    const headT = clamp(lv*.03,-1,1.2)*amp + Math.sin(s.t*.9)*.45*amp + breathe*.2*amp - nodK*2.4 + s.look*amp*.9 + shyK*2.2 - greetK*1.6;
+    spring(s, "hd", "hdv", clamp(headT, -2.6, 2.6), 36, 8, dt); tr(P.head, {r:s.hd});
+    // ذيل الحجاب: يتأخر عن الحركة ويرفرف شوية
+    spring(s, "dr", "drv", clamp(-lv*.04,-1.4,1.4)*amp + Math.sin(s.t*1.1+.4)*.55*amp + Math.sin(ph+.8)*.7*g, 20, 5, dt); tr(P.drape, {r:s.dr});
+    // التنورة: تنميل من خط الورك (skew صغير) — الحافة العليا ثابتة فما يبين فاصل
+    spring(s, "sk", "skv", clamp(-lv*.035,-.9,.9)*amp + Math.sin(ph)*.75*g + Math.sin(s.t*1.05)*.22*amp, 24, 6, dt); tr(P.skirt, {k:s.sk});
+    // رمشة كل كم ثانية (أحياناً رمشتين ورا بعض)، والجفن يمشي ويا ميلان الراس
+    s.blink -= dt; if(s.blink <= 0){ s.bt = .17; s.blink = Math.random() < .18 ? .32 : 2.6 + Math.random()*3.4; }
+    s.bt = Math.max(0, s.bt - dt);
+    const c = s.bt > 0 ? Math.sin((1 - s.bt/.17)*Math.PI) : 0, ho = s.R.parts.head.o;
+    ["blinkL","blinkR"].forEach(k => { const img = P[k]; if(!img) return; const o = s.R.parts[k].o, dx = ho[0]-o[0], dy = ho[1]-o[1];
+      img.style.opacity = c > .04 ? 1 : 0;
+      img.style.transform = `translate(${dx}%,${dy}%) rotate(${s.hd.toFixed(2)}deg) translate(${-dx}%,${-dy}%) scaleY(${c.toFixed(3)})`; });
   }
   function adoolParts(s, P, sw, g, breathe, amp, lv, dt){
     const swing = sw*15*g;
@@ -118,7 +131,8 @@ const TRig = (() => {
     tr(P.armR, {r:aR});
     if(P.wave){ P.wave.style.opacity = waving ? 1 : 0; tr(P.wave, {r: waving ? Math.sin(s.wave*14)*9 : 0}); }
     tr(P.legL, {r:sw*10*g}); tr(P.legR, {r:-sw*10*g});
-    spring(s, "hd", "hdv", clamp(lv*.05,-1.5,2)*amp + breathe*.5*amp + (s.greet>0 ? Math.sin((1-s.greet/.9)*Math.PI)*-4 : 0), 40, 8, dt);
+    // وقت يحچي: هزّة راس صغيرة ويا كل كلمتين (nod)
+    spring(s, "hd", "hdv", clamp(lv*.05,-1.5,2)*amp + breathe*.5*amp + (s.greet>0 ? Math.sin((1-s.greet/.9)*Math.PI)*-4 : 0) - bell(s.nod, .8)*5, 40, 8, dt);
     tr(P.head, {r:s.hd});
   }
   const wave  = (c, t=1.4) => { if(c.rig) c.rig.wave = t; };

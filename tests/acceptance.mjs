@@ -93,33 +93,33 @@ for (const vp of [{ width: 390, height: 844 }, { width: 430, height: 932 }, { wi
   await ctx.close();
 }
 
-/* 4) النهاية: مقفولة قبل الرحلة، وجملة عدول كاملة بعدها */
+/* 4) «كلمة من عدول»: مقفول قبل الحكاية، وينفتح ويشتغل من الضغط على إكمال آخر مشهد بالمحطة الأخيرة */
 {
   const { ctx, p } = await page({ width: 390, height: 844 });
   await go(p, "ending");
-  ok("النهاية مقفولة قبل إكمال الرحلة", await p.isVisible(".end-lock") && !(await p.$(".tl-play")));
-  await p.evaluate(() => {
-    const done = {}; HIKAYAT.stations.forEach(s => done[s.id] = true);
-    localStorage.setItem("hk_story", JSON.stringify({ done }));
-    localStorage.setItem("hk_games", JSON.stringify({ memory: { won: true, plays: 1 } }));
-  });
-  await go(p, "home"); await p.reload(); await p.waitForFunction(() => !document.getElementById("loader"));
-  await go(p, "ending");
-  ok("المحطات بدون الألعاب الأساسية ما تكفي للنهاية", await p.isVisible(".end-lock"));
-  await p.evaluate(() => localStorage.setItem("hk_games", JSON.stringify({ memory: { won: true }, puzzle: { won: true }, camera: { won: true } })));
-  await p.reload(); await p.waitForFunction(() => !document.getElementById("loader")); await p.waitForTimeout(800);
+  ok("«كلمة من عدول» مقفول قبل إكمال الحكاية", await p.isVisible(".end-lock") && !(await p.$(".tl-play")));
+  // كل المحطات خلصت إلا الأخيرة (بدون أي لعبة — الفصل يحتاج الحكاية بس)
+  await p.evaluate(() => { const done = {}; HIKAYAT.stations.slice(0, -1).forEach(s => done[s.id] = true); localStorage.setItem("hk_story", JSON.stringify({ done })); localStorage.removeItem("hk_games"); });
+  const last = await p.evaluate(() => HIKAYAT.stations[HIKAYAT.stations.length - 1].id);
+  await go(p, "story:" + last); await p.reload(); await p.waitForFunction(() => !document.getElementById("loader")); await p.waitForTimeout(1200);
   await p.click("[data-h=auto]");
-  await p.waitForSelector(".fx-adool", { timeout: 60000 }).catch(() => {});
-  const line = await p.$eval(".fx-adool p", e => e.textContent).catch(() => "");
+  await p.waitForSelector(".tp-trans", { timeout: 150000 }).catch(() => {});
+  ok("إكمال آخر مشهد ينقل لفصل «كلمة من عدول»", (await p.$eval(".tp-trans", e => e.textContent).catch(() => "")).includes("كلمة من عدول"));
+  await p.waitForFunction(() => location.hash === "#ending" && document.querySelector(".tl-play"), null, { timeout: 15000 }).catch(() => {});
+  await p.waitForTimeout(800);
+  ok("عدول مخفي ببداية الفصل (يدخل بعدين)", await p.$eval(".tc-adool", e => e.hidden).catch(() => false));
+  await p.waitForSelector(".adool-say .btn:not([hidden])", { timeout: 60000 }).catch(() => {});
+  const line = await p.$eval(".adool-say p", e => e.textContent).catch(() => "");
   ok("عدول يقول الجملة حرفياً", line === "عدول يتمنالكم زواج سعيد، يارب دوم السعادة والحياة السعيدة.", line);
+  ok("الكلام فقاعة داخل المشهد (مو نافذة منبثقة)", !!(await p.$(".tp-stage .adool-say")) && !(await p.$(".fx-adool")));
   const inFrame = await p.$eval(".tc-adool .rig", e => { const r = e.getBoundingClientRect(); return !e.closest(".tc").hidden && r.width > 0 && r.left >= 0 && r.right <= innerWidth; }).catch(() => false);
-  ok("عدول داخل الكادر على الهاتف (دخل من الطرف ووگف يم عيسى وآمنة)", inFrame);
-  const fits = await p.$eval(".fa-card", e => { const r = e.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && e.scrollWidth <= e.clientWidth + 1; }).catch(() => false);
-  ok("بطاقة عدول مقروءة بدون قص على الهاتف", fits);
-  await p.click(".fx-adool button").catch(() => {});
-  await p.waitForSelector(".tp-final", { timeout: 20000 }).catch(() => {});
+  ok("عدول كامل داخل الكادر على الهاتف", inFrame);
+  const fits = await p.$eval(".adool-say", e => { const r = e.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.top >= 0 && e.scrollWidth <= e.clientWidth + 1; }).catch(() => false);
+  ok("الفقاعة مقروءة بدون قص على الهاتف", fits);
+  await p.click(".adool-say .btn").catch(() => {});
+  await p.waitForSelector(".tp-final", { timeout: 30000 }).catch(() => {});
   ok("بعد عدول: لقطة عيسى وآمنة وزر «إعادة عيش الحكاية» و«حفظ النهاية»", await p.isVisible("[data-replay]") && await p.isVisible("[data-save]"));
-  ok("النهاية بلا أخطاء", !p.errors.length, p.errors.slice(0, 3).join(" | "));
+  ok("الفصل بلا أخطاء", !p.errors.length, p.errors.slice(0, 3).join(" | "));
   await ctx.close();
 }
 
@@ -147,19 +147,29 @@ for (const vp of [{ width: 390, height: 844 }, { width: 430, height: 932 }, { wi
   await ctx.close();
 }
 
-/* 6) العروس: طبقة الإيد اليمين موجودة ومحمّلة بكل محطة تمشي بيها آمنة وحدها */
+/* 6) آمنة وحدها (صورتها المنفردة الجديدة): كل الطبقات محمّلة، بلا مطّ ولا قص، وبكل مقاس شاشة */
 {
   const { ctx, p } = await page({ width: 390, height: 844 });
   await go(p, "home");
   await p.evaluate(() => localStorage.setItem("hk_prefs", JSON.stringify({ openAll: true })));
+  const check = () => p.evaluate(() => {
+    const t = document.querySelector(".tc-amna"), rig = t && t.querySelector(".rig"); if (!rig) return { none: true };
+    const im = [...rig.querySelectorAll("img")], r = rig.getBoundingClientRect();
+    return { parts: im.map(i => i.dataset.p).sort().join(","), loaded: im.every(i => i.complete && i.naturalWidth > 0),
+      ratio: +(r.width / r.height / RIG_DATA.amna.ar).toFixed(3), clip: im.some(i => getComputedStyle(i).clipPath !== "none"),
+      sameSize: im.every(i => Math.abs(i.naturalWidth / i.naturalHeight - RIG_DATA.amna.ar) < .01) };
+  });
   for (const id of ["palace", "story", "amnabday", "suit"]) {
     await go(p, "story:" + id); await p.reload(); await p.waitForFunction(() => !document.getElementById("loader")); await p.waitForTimeout(1500);
-    const r = await p.evaluate(() => { const im = [...document.querySelectorAll(".tp-stage img")].filter(i => /(amna|pair)-/.test(i.src));
-      const arm = im.filter(i => /amna-armR/.test(i.src));
-      return { n: im.length, arm: arm.length, loaded: arm.every(i => i.complete && i.naturalWidth > 0), pair: im.some(i => /pair-/.test(i.src)) }; });
-    ok(`آمنة بمحطة ${id}: إيدها اليمين (طبقة armR) محمّلة`, r.arm > 0 && r.loaded, JSON.stringify(r));
+    const r = await check();
+    ok(`آمنة وحدها بمحطة ${id}: صورتها الكاملة بكل طبقاتها، بلا مطّ ولا قص`, !r.none && r.loaded && r.parts === "blinkL,blinkR,core,drape,head,skirt" && Math.abs(r.ratio - 1) < .01 && !r.clip && r.sameSize, JSON.stringify(r));
   }
-  ok("العروس بلا أخطاء", !p.errors.length, p.errors.slice(0, 3).join(" | "));
+  for (const vp of [{ width: 360, height: 640 }, { width: 430, height: 932 }, { width: 844, height: 390 }]) {
+    await p.setViewportSize(vp); await p.waitForTimeout(700);
+    const r = await check();
+    ok(`آمنة تبقى كاملة بعد تغيير الشاشة لـ ${vp.width}×${vp.height}`, r.loaded && Math.abs(r.ratio - 1) < .01, JSON.stringify(r));
+  }
+  ok("آمنة بلا أخطاء", !p.errors.length, p.errors.slice(0, 3).join(" | "));
   await ctx.close();
 }
 

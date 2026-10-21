@@ -141,6 +141,16 @@ const HIKAYAT = (() => {
       main: [{ a: "flowerArch", x: sc.archX || (sc.len - 20), y: 87, w: 26 }],
       fore: R(Math.ceil(span(sc, VW, 1.3) / 60), i => ({ a: "plant", args: ["#3A3A30"], x: i * 60 + 30, y: 110, w: 14, o: .95 }))
     }),
+    // «كلمة من عدول»: حديقة هادية بالليل، أضواء وفوانيس — بلا قوس ولا كراسي (الزفاف بعده ما صار)
+    adoolGarden: (sc, VW) => ({
+      far: [{ a: "stars", args: [70], x: -20, y: 2, w: span(sc, VW, .25), h: 40, tl: true },
+        { a: "cityNight", args: [800], x: -20, y: 54, w: span(sc, VW, .25), h: 32, tl: true, o: .5 }],
+      mid: [{ a: "stringLights", args: [800], x: -20, y: 16, w: span(sc, VW, .55), h: 12, tl: true },
+        ...R(Math.ceil(span(sc, VW, .55) / 30), i => ({ a: "lanternHang", args: [["#F6C86A", "#F2A07A"][i % 2]], x: i * 30 + 15, y: 38 + rnd(i) * 6, w: 3.2, cls: "swing" })),
+        ...R(Math.ceil(span(sc, VW, .55) / 45), i => ({ a: "palm", args: ["#1E1E2A"], x: i * 45 + 22, y: 87, w: 14 }))],
+      main: [],
+      fore: R(Math.ceil(span(sc, VW, 1.3) / 60), i => ({ a: "plant", args: ["#24302A"], x: i * 60 + 30, y: 110, w: 14, o: .95 }))
+    }),
     // ليلة الزواج: حديقة، أضواء، قوس ورد ونوافير نار
     wedding: (sc, VW) => ({
       far: [{ a: "stars", args: [70], x: -20, y: 2, w: span(sc, VW, .25), h: 40, tl: true },
@@ -167,7 +177,8 @@ const HIKAYAT = (() => {
     lightsDown: async api => { api.stage.classList.add("dim"); api.TAudio.sfx("soft"); },
     doorOpen: async api => { const d = api.getObj("door"); api.TAudio.sfx("keys"); await api.wait(500); api.TAudio.sfx("door"); if (d) api.updObj("door", { args: [1], cls: "opened" }); api.stage.classList.add("doorlight"); await api.wait(1200); },
     furnish: async api => { const ids = ["plant", "sofa", "table", "lamp", "art"]; for (const id of ids) { const el = q(api, id); if (el) { el.classList.add("in"); api.TAudio.sfx("pick"); await api.wait(380); } } },
-    bouquet: async api => { const a = api.chars.amna; if (!a) return; const el = api.deco({ a: "bouquetYellow", x: a.x - 2.5, y: a.y - 9, w: 7, cls: "gift-in" }, "main"); api.TAudio.sfx("sparkle"); await api.wait(800); },
+    // الباقة بإيدها (صورتها المنفردة: الإيد بحدود 14em فوق الأرض)
+    bouquet: async api => { const a = api.chars.amna; if (!a) return; const el = api.deco({ a: "bouquetYellow", x: a.x - 3.4 * (a.face || 1), y: a.y - 10.5, w: 7, cls: "gift-in" }, "main"); api.TAudio.sfx("sparkle"); await api.wait(800); },
     sparks: async api => { api.stage.classList.add("sparking"); api.TAudio.sfx("firework"); await api.wait(1600); },
     fireworks: async api => { if (!api.motionOK()) { api.TAudio.sfx("cheer"); return; } const box = h(`<div class="fx-fireworks">${R(6, i => `<span style="left:${10 + rnd(i) * 80}%;top:${8 + rnd(i, 3) * 30}%;--d:${i * .45}s">${TART.firework(["#FFD48A", "#F2A07A", "#E7CB8E", "#FFFFFF"][i % 4])}</span>`).join("")}</div>`); api.v.appendChild(box); for (let i = 0; i < 4; i++) { api.TAudio.sfx("firework"); await api.wait(700); } api.TAudio.sfx("cheer"); await api.wait(1400); box.classList.add("out"); setTimeout(() => box.remove(), 900); },
     inviteCard: api => new Promise(res => {
@@ -178,11 +189,32 @@ const HIKAYAT = (() => {
       card.querySelector("button").onclick = close; if (api.auto) setTimeout(close, 4200);
     }),
     lightsPreview: async api => { api.stage.classList.add("prep-lit"); api.TAudio.sfx("sparkle"); await api.wait(1800); api.stage.classList.remove("prep-lit"); },
-    adoolCard: api => new Promise(res => {
-      const card = h(`<div class="fx-adool" role="dialog" aria-label="رسالة عدول"><div class="fa-card"><img src="${TRig.still("adool")}" alt="عدول"><span class="fa-tag">عدول</span><p aria-label="${esc(CONFIG.adoolLine)}">${CONFIG.adoolLine.split(" ").map((w, i) => `<span class="w" style="--i:${i}">${esc(w)}</span>`).join(" ")}</p><button class="btn gold">نكمّل</button></div></div>`);
-      api.v.appendChild(card); api.TAudio.sfx("sparkle");
-      let shut = false; const close = () => { if (shut) return; shut = true; card.classList.add("out"); setTimeout(() => { card.remove(); res(); }, 450); };
-      $("button", card).onclick = close; if (api.auto) setTimeout(close, 10000);
+    // عدول يحچي داخل المشهد: فقاعة كلام فوق راسه، الكلمات تطلع وحدة وحدة ويا حركة راسه (مو نافذة منبثقة)
+    adoolSpeech: api => new Promise(async res => {
+      const a = api.chars.adool, line = CONFIG.adoolLine, words = line.split(" ");
+      const box = h(`<div class="adool-say" role="status" aria-live="polite" aria-label="${esc(line)}"><span class="as-name">عدول</span><p>${words.map((w, i) => `<span class="w">${esc(w)}</span>`).join(" ")}</p><button class="btn gold sm" hidden>نكمّل</button><i class="as-tail"></i></div>`);
+      api.stage.appendChild(box);
+      // الفقاعة فوق روس الكل (حتى ما تغطي وجوه عيسى وآمنة)، وذيلها ينزل لراس عدول
+      const place = () => { const rig = a && a.el.querySelector(".rig"); if (!rig) return; const sr = api.stage.getBoundingClientRect(), rr = rig.getBoundingClientRect(), W = box.offsetWidth;
+        const tops = Object.values(api.chars).filter(c => c.vis && c.el.querySelector(".rig")).map(c => c.el.querySelector(".rig").getBoundingClientRect().top);
+        const by = Math.max(sr.top + 70 + box.offsetHeight, Math.min(rr.top - 12, Math.min(...tops) - 16));
+        const mid = rr.left + rr.width / 2 - sr.left, left = Math.max(10, Math.min(sr.width - W - 10, mid - W / 2));
+        box.style.left = left + "px"; box.style.bottom = (sr.bottom - by) + "px";
+        box.style.setProperty("--tx", Math.max(22, Math.min(W - 22, mid - left)) + "px"); box.style.setProperty("--th", Math.max(12, rr.top + rr.height * .04 - by) + "px"); };
+      place(); addEventListener("resize", place);
+      const sp = [...box.querySelectorAll(".w")];
+      let fast = !api.motionOK();
+      box.onclick = () => { fast = true; };
+      api.TAudio.sfx("soft");
+      for (let i = 0; i < sp.length; i++) {
+        sp[i].classList.add("on");
+        if (i % 2 === 0 && a) TRig.nod(a);
+        if (!fast) await api.wait(260 + words[i].length * 45);
+      }
+      sp.forEach(x => x.classList.add("on"));
+      const btn = box.querySelector("button"); btn.hidden = false; place();
+      let shut = false; const close = () => { if (shut) return; shut = true; removeEventListener("resize", place); box.classList.add("out"); setTimeout(() => { box.remove(); res(); }, 420); };
+      btn.onclick = e => { e.stopPropagation(); close(); }; if (api.auto) setTimeout(close, 5200);
     })
   };
 
@@ -215,6 +247,7 @@ const HIKAYAT = (() => {
     tailor: "linear-gradient(180deg,#2B211C 0%,#3B2E26 100%)",
     wedding: "linear-gradient(180deg,#0B0E22 0%,#1E1A3A 50%,#3A2340 85%,#6A3A3A 100%)",
     engagement: "linear-gradient(180deg,#120F2A 0%,#2A1E44 50%,#4A2A4A 85%,#6E3E44 100%)",
+    adool: "linear-gradient(180deg,#141832 0%,#2C2648 50%,#5A3A54 85%,#8A5250 100%)",
     prep: "linear-gradient(180deg,#2E2A4E 0%,#6E4E6E 40%,#D98E6E 78%,#F2C48A 100%)"
   };
 
@@ -234,8 +267,8 @@ const HIKAYAT = (() => {
         objs: [
           { id: "desk", x: 26, w: 21, a: "desk", label: "مكان شغل آمنة", run: [{ say: "narr", t: "آمنة چانت تشتغل بالموقع. من هنا تشوف منو يدخل ومنو يطلع." }, { say: "amna", t: "كل يوم وجوه جديدة… بس واحد بس يرجع كل مرة.", e: "shy" }] },
           { id: "frames", x: 64, y: 70, w: 8, a: "goldFrame", args: ["#CDBBA0", false], label: "صور قاعات المكان", run: [{ photos: ["halls1", "halls2", "amna_hall"], title: "قاعات بديكور كلاسيكي", t: "من الصور المرفوعة. اسم المكان مو مكتوب عليها، فنخليه بدون تأكيد." }] },
-          { id: "tripod", x: 124, w: 7, a: "tripod", label: "كاميرا عيسى", run: [{ act: [["fx", "flash"]] }, { say: "narr", t: "كل مرة نفس الشي: يركّب الكاميرا، يصوّر بهدوء، ويطلع." }, { act: [["isa", "bark", "…", 1600]] }] },
-          { id: "phone", x: 168, w: 4, a: "phone", args: [true], y: 79, label: "الإنستا", flag: "likes", run: [{ say: "narr", t: "بعدين صاروا متابعين بالإنستا… وصارت بس لايكات على الستوريات، بلا حچي." }, { fx: "likes" }, { say: "amna", t: "لايك… ولايك… ولا رسالة وحدة.", e: "shy" }] }
+          { id: "tripod", x: 124, w: 7, a: "tripod", label: "كاميرا عيسى", run: [{ act: [["fx", "flash"]] }, { say: "narr", t: "كل مرة نفس الشي: يركّب الكاميرا، يصوّر بهدوء، ويطلع." }] },
+          { id: "phone", x: 168, w: 4, a: "phone", args: [true], y: 79, label: "الإنستا", flag: "likes", run: [{ say: "narr", t: "بعدين عيسى ضافها بالإنستا… وصارت بيناتهم بس لايكات على الستوري. لا رسائل، ولا حچي." }, { fx: "likes" }, { say: "amna", t: "لايك… ولايك… ولا رسالة وحدة.", e: "shy" }] }
         ],
         deco: [{ a: "desk", x: 168, y: 86.5, w: 14 }]
       } },
@@ -246,16 +279,19 @@ const HIKAYAT = (() => {
         { act: [["fx", "flash"], ["wait", 500]] }, { act: [["fx", "flash"]] },
         { say: "amna", t: "هذا نفس الولد… يجي، يصوّر، ويطلع.", e: "look" },
         { say: "amna", t: "ما يحچي ويا أحد. أحسّه شايف نفسه شوية." },
-        { act: [["cam", 0, 1200]] },
-        { explore: { until: "likes", hints: [{ after: 7, who: "amna", t: "خلّي أشوف الكاميرا مالته… والتلفون على الميز هناك." }] } },
+        // نظرات من بعيد — بدون ولا كلمة
+        { act: [["isa", "look"], ["amna", "look"], ["wait", 1400]] },
+        { say: "narr", t: "نظرات من بعيد… وولا كلمة وحدة بيناتهم." },
         { puzzle: "focus", title: "لقطة من عين عيسى", intro: "عيسى چان يجي يصوّر بالقصر. انتظروا الصورة تصفى، ودوسوا الغالق — ثلاث لقطات.", vf: focusScene, need: 3, win: "ثلاث لقطات واضحة. مثل ما يسوّي هو." },
         { act: [["isa", "to", 200], ["wait", 1800]] }, { act: [["isa", "hide"]] },
         { say: "narr", t: "ويطلع… مثل كل مرة." },
-        { letter: "site", title: "بعدين، كتبلها عيسى" }
+        { act: [["cam", 0, 1200]] },
+        // بعدها: عيسى يضيفها بالإنستا، ولايكات بس (بدون رسائل بهالمرحلة)
+        { explore: { until: "likes", hints: [{ after: 7, who: "amna", t: "التلفون على الميز هناك…" }] } }
       ] },
 
     /* 2 ----------------------------------------------------------------- */
-    { id: "story", title: "أول رسالة", dateLabel: "بداية الحكاية", place: "ستوري العرسان", icon: "letter", color: ["#2C2F4C", "#B9A0B7"], sky: SKY.night, theme: M.night,
+    { id: "story", title: "أول تعليق",  dateLabel: "بداية الحكاية", place: "ستوري العرسان", icon: "letter", color: ["#2C2F4C", "#B9A0B7"], sky: SKY.night, theme: M.night,
       lead: "ستوري نزّله عيسى بالليل عن عرسان غريبي الأطوار صوّرهم. آمنة علّقت، ومن هناك بلشوا يحچون — صدفة ملخبطة تحوّلت لأحلى صدفة.",
       photos: ["story_bw"],
       cliff: "صدفة ملخبطة… صارت أحلى صدفة.",
@@ -276,7 +312,9 @@ const HIKAYAT = (() => {
         { act: [["isa", "face", 1], ["amna", "face", -1]] },
         { act: [["isa", "look"], ["amna", "look"]] },
         { say: "narr", t: "حسّوا شكد يشبهون بعض، وكل واحد صارح الثاني بمشاعره." },
-        { voice: true, title: "علاقتنا…", t: "علاقتنا چانت غريبة، بس حلوة بنفس الوقت… بدت بصدفة بالقصر الروماني. عيسى چان يجي يصوّر، وآني چنت أشتغل بالموقع. بالبداية ما چان بيناتنا أي حچي؛ أشوفه يجي يصوّر ويطلع، وكنت أحسّه شايف نفسه لأن ما يحچي ويا أحد.\nبعدين شفت ستوري إله، وضفته بالإنستا، وصارت بس لايكات على الستوريات… لحد ذاك اليوم اللي نشر بيه ستوري عن عرسان غريبي الأطوار صوّرهم. علّقتله، ومن هناك بلشنا نحچي.\nبأيام بسيطة، يمكن ما كملت عشرة أيام، حسّينا شكد نشبه بعض، وكل واحد صارح الثاني بمشاعره. من يوم 16/1 لهسه، أحسها أحلى صدفة صارت بحياتي." }
+        { voice: true, title: "علاقتنا…", t: "علاقتنا چانت غريبة، بس حلوة بنفس الوقت… بدت بصدفة بالقصر الروماني. عيسى چان يجي يصوّر، وآني چنت أشتغل بالموقع. بالبداية ما چان بيناتنا أي حچي؛ أشوفه يجي يصوّر ويطلع، وكنت أحسّه شايف نفسه لأن ما يحچي ويا أحد.\nبعدين عيسى ضافني بالإنستا، وصارت بس لايكات على الستوريات… لحد ذاك اليوم اللي نشر بيه ستوري عن عرسان غريبي الأطوار صوّرهم. علّقتله، ومن هناك بلشنا نحچي.\nبأيام بسيطة، يمكن ما كملت عشرة أيام، حسّينا شكد نشبه بعض، وكل واحد صارح الثاني بمشاعره. من يوم 16/1 لهسه، أحسها أحلى صدفة صارت بحياتي." },
+        // رسالة عيسى عن «الصدفة اللي خلتني أجي للموقع» — بعد ما صار بيناتهم حچي، مو بأول يوم. تاريخها مو معروف.
+        { letter: "site", title: "بعد ما صار بيناتهم حچي… كتبلها عيسى" }
       ] },
 
     /* 3 ----------------------------------------------------------------- */
@@ -473,19 +511,19 @@ const HIKAYAT = (() => {
       ] }
   ];
 
-  /* ---------------- النهاية: عدول (بعد الرحلة فقط) ---------------- */
-  const ending = { id: "ending", title: "النهاية", dateLabel: "بعد الرحلة", place: "", sky: SKY.wedding, theme: M.celebrate,
-    scenes: { night: { theme: "wedding", len: 150, gk: "grassnight", amb: "sparks", archX: 60 } },
+  /* ---------------- فصل إضافي: «كلمة من عدول» — ينفتح بس بعد ما تخلص كل المحطات ---------------- */
+  const ending = { id: "ending", title: "كلمة من عدول", dateLabel: "فصل إضافي", place: "بعد ما خلصت الحكاية", sky: SKY.adool, theme: M.tender,
+    scenes: { garden: { theme: "adoolGarden", len: 150, gk: "grassnight", amb: "glow" } },
     beats: [
-      // الكاميرا تحط عيسى وآمنة يسار الكادر، وعدول يدخل من الحافة اليمنى (خارج الكادر) ويوقف جنبهم — على الهاتف والكمبيوتر
-      { scene: "night", cast: { pair: [60, null, 1], adool: [140, null, -1, "hide"] }, player: "pair", cam: VW => Math.max(0, 60 - VW * .36) },
-      { cine: true, narr: "خلصت الرحلة… بس أحد صغير جاي يركض من طرف الحديقة." },
+      // عيسى وآمنة يسار الكادر، وعدول يدخل من الحافة اليمنى (برّا الكادر) ويوگف يمهم — على الهاتف والكمبيوتر
+      { scene: "garden", cast: { pair: [60, null, 1], adool: [140, null, -1, "hide"] }, player: "pair", cam: VW => Math.max(0, 60 - VW * .36) },
+      { cine: true, narr: "فصل إضافي · كلمة من عدول. خلصت حكاية عيسى وآمنة… بس أحد صغير جاي يركض من طرف الحديقة.", btn: "منو جاي؟" },
       { act: [["adool", "show"], ["adool", "to", 79, { speed: 20 }]] },
-      { act: [["adool", "wave", 1800], ["pair", "look"]] },
-      { act: [["adool", "greet"], ["wait", 700]] },
-      { say: "adool", t: CONFIG.adoolLine, e: "greet" },
-      { fx: "adoolCard" },
-      { act: [["pair", "joy"], ["fx", "fireworks"]] }
+      { act: [["pair", "look"], ["adool", "wave", 2000]] },
+      { act: [["adool", "greet"], ["wait", 800]] },
+      { fx: "adoolSpeech" },
+      { act: [["pair", "joy"], ["adool", "greet"], ["sfx", "sparkle"], ["wait", 1400]] },
+      { calm: true, t: "عيسى وآمنة… والموعد المنتظر 30/10/2026. والحكاية بعدها تبدي." }
     ] };
 
   return { stations, ending, themes, fx, itemArt, barks, winLines, audio: {} };
