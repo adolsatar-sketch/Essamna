@@ -518,8 +518,8 @@
 @keyframes hkFw{0%{transform:translate(-50%,-50%) scale(.1);opacity:1}70%{opacity:1}100%{transform:translate(-50%,-50%) scale(1.1);opacity:0}}
 .fx-adool{position:absolute;inset:0;z-index:70;display:grid;place-items:center;padding:16px;background:rgba(10,8,24,.55);animation:fadeIn .4s}
 .fx-adool.out{opacity:0;transition:opacity .45s}
-.fa-card{position:relative;width:min(520px,100%);display:grid;justify-items:center;gap:8px;padding:76px 18px 18px;margin-top:60px;border-radius:22px;background:linear-gradient(180deg,#FFFBF2,#F6E9CF);color:#3B2A1E;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.55),inset 0 0 0 3px #E7CB8E;animation:tpCameo .7s cubic-bezier(.2,1.4,.4,1)}
-.fa-card img{position:absolute;top:-70px;width:120px;height:auto;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}
+.fa-card{position:relative;width:min(520px,100%);display:grid;justify-items:center;gap:8px;padding:100px 18px 18px;margin-top:70px;border-radius:22px;background:linear-gradient(180deg,#FFFBF2,#F6E9CF);color:#3B2A1E;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.55),inset 0 0 0 3px #E7CB8E;animation:tpCameo .7s cubic-bezier(.2,1.4,.4,1)}
+.fa-card img{position:absolute;top:-78px;width:108px;height:auto;filter:drop-shadow(0 8px 10px rgba(0,0,0,.35))}
 .fa-tag{padding:0 14px;border-radius:999px;background:#B8D69C;color:#23331A;font-weight:800}
 .fa-card p{margin:0;font-size:clamp(1.15rem,4.4vw,1.4rem);line-height:1.95;font-weight:700}
 /* بطاقة النهاية */

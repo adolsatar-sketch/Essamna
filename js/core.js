@@ -205,7 +205,7 @@ function heroSkyline() {
     <circle cx="520" cy="430" r="190" fill="url(#hsun)"/>
     <path d="M0 470 L60 440 L120 452 L190 420 L260 446 L330 430 L360 470Z" fill="#5A3E4A" opacity=".7"/>
     <path d="M680 470 L720 436 L790 448 L850 410 L920 440 L1000 424 L1040 450 L1040 470Z" fill="#5A3E4A" opacity=".7"/>
-    <g opacity=".95"><path d="M370 372h300l-18-28H388z" fill="#E9D2AE"/><path d="M398 344h244l-122-50z" fill="#F4E2C6"/><path d="M520 302l0-8" stroke="#E7CB8E" stroke-width="4"/>${cols}<rect x="370" y="466" width="300" height="12" fill="#CDAE82"/>
+    <g opacity=".9" transform="translate(330 40) scale(.8)"><path d="M370 372h300l-18-28H388z" fill="#E9D2AE"/><path d="M398 344h244l-122-50z" fill="#F4E2C6"/><path d="M520 302l0-8" stroke="#E7CB8E" stroke-width="4"/>${cols}<rect x="370" y="466" width="300" height="12" fill="#CDAE82"/>
       ${[0, 1, 2, 3, 4, 5, 6].map(i => `<path d="M${403 + i * 30} 400a8 10 0 0 1 16 0v40h-16z" fill="#FFD796" opacity=".85"/>`).join("")}</g>
     <path d="M0 478h1040v142H0z" fill="url(#hwater)"/>
     <path d="M140 500c120 6 240-6 360 2s260 8 400-4" stroke="#F5C48A" stroke-width="3" opacity=".55" fill="none"/>
