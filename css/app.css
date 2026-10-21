@@ -74,7 +74,7 @@ body.no-dock .view.page{padding-bottom:calc(24px + var(--safe-b))}
 .modal h2,.modal h3{font-family:var(--font-d);font-weight:700;margin:0 0 8px;line-height:1.3;padding-inline-end:44px;color:var(--brown)}
 .modal h2{font-size:1.7rem}.modal h3{font-size:1.4rem}
 .modal p{margin:.3em 0 .8em}
-.modal .x{position:absolute;top:10px;inset-inline-end:10px;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--paper-2);color:var(--ink);display:grid;place-items:center}
+.modal .x{z-index:6;box-shadow:0 2px 8px rgba(0,0,0,.18);position:absolute;top:10px;inset-inline-end:10px;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--paper-2);color:var(--ink);display:grid;place-items:center}
 .modal .x svg{width:20px;height:20px}
 .note{font-size:.88rem;color:var(--ink-soft)}
 .toast{position:fixed;left:50%;bottom:calc(var(--dock) + var(--safe-b) + 18px);transform:translateX(-50%);z-index:400;display:flex;align-items:center;gap:8px;max-width:min(92vw,460px);padding:10px 16px;border-radius:16px;background:var(--paper);color:var(--ink);font-weight:700;box-shadow:var(--shadow);animation:toastIn .35s var(--ease)}

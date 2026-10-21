@@ -123,7 +123,7 @@ const TPZ = (() => {
   P.focus = (body, o, api) => {
     const need = o.need || 3; let hits = 0, t = 0, raf = 0, last = performance.now(), alive = true;
     const slow = (window.motionOK && !motionOK()) ? .45 : 1;
-    body.appendChild(H(`<div class="pz-focus"><div class="pz-vf"><svg viewBox="0 0 160 100" class="pz-scene">${o.scene || ""}</svg><span class="pz-af"></span><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i><b class="pz-flash2"></b></div>
+    body.appendChild(H(`<div class="pz-focus"><div class="pz-vf"><svg viewBox="0 0 160 100" class="pz-scene">${o.vf || ""}</svg><span class="pz-af"></span><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i><b class="pz-flash2"></b></div>
       <div class="pz-hits">${"<i></i>".repeat(need)}</div><button class="btn gold pz-now" aria-label="الغالق">${TART.symbol("camera","#2A1E12")}<span>صوّر</span></button></div>`));
     const sceneEl = body.querySelector(".pz-scene"), vf = body.querySelector(".pz-vf"), fl = body.querySelector(".pz-flash2");
     const blur = () => Math.abs(Math.sin(t)) * 7;

@@ -26,13 +26,13 @@ const HIKAYAT = (() => {
     // القصر الروماني: قاعة بيضة بأعمدة وثريات وستائر زرقة، وأرضية رخام تلمع
     palace: (sc, VW) => ({
       far: [{ a: "hallWall", args: [400], x: -20, y: 6, w: span(sc, VW, .25), h: 80, tl: true },
-        ...R(Math.ceil(span(sc, VW, .25) / 34), i => ({ a: "archWindow", args: ["#B9D3E2", "#7FA3C4"], x: 14 + i * 34, y: 78, w: 15 }))],
-      mid: [...R(Math.ceil(span(sc, VW, .55) / 30), i => ({ a: "column", x: i * 30 + 4, y: 87, w: 9 })),
-        ...R(Math.ceil(span(sc, VW, .55) / 60), i => ({ a: "chandelier", x: i * 60 + 32, y: 30, w: 17, cls: "sway", fx: false })),
+        ...R(Math.ceil(span(sc, VW, .25) / 34), i => ({ a: "archWindow", args: ["#B9D3E2", "#7FA3C4"], x: 14 + i * 34, y: 80, w: 21 }))],
+      mid: [...R(Math.ceil(span(sc, VW, .55) / 30), i => ({ a: "column", x: i * 30 + 4, y: 87, w: 13 })),
+        ...R(Math.ceil(span(sc, VW, .55) / 60), i => ({ a: "chandelier", x: i * 60 + 32, y: 34, w: 26, cls: "sway" })),
         ...R(Math.ceil(span(sc, VW, .55) / 60), i => ({ a: "goldFrame", args: ["#CDBBA0", i % 2 === 1], x: i * 60 + 18, y: 64, w: 7 })),
         ...R(Math.ceil(span(sc, VW, .55) / 90), i => ({ a: "sofaClassic", args: ["#2E3A5C"], x: i * 90 + 50, y: 87, w: 22 }))],
       main: [{ a: "rugRound", args: ["#7A3B3B"], x: 80, y: 88.5, w: 46 }, { a: "topiary", x: 8, y: 86.5, w: 6 }, { a: "topiary", x: sc.len - 8, y: 86.5, w: 6 }],
-      fore: R(Math.ceil(span(sc, VW, 1.3) / 95), i => ({ a: "column", args: ["#E9DCC4", "#B9A27E"], x: i * 95 + 60, y: 112, w: 14, o: .92, cls: "fore-col" }))
+      fore: R(Math.ceil(span(sc, VW, 1.3) / 95), i => ({ a: "column", args: ["#E9DCC4", "#B9A27E"], x: i * 95 + 60, y: 112, w: 12, o: .55, cls: "fore-col" }))
     }),
     // ليلة الستوري: غرفة عيسى يسار، غرفة آمنة يمين، والمدينة بالنص
     night: (sc, VW) => ({
@@ -74,7 +74,7 @@ const HIKAYAT = (() => {
     court: (sc, VW) => ({
       far: [{ a: "hills", args: ["#9DB0A0", "#B8C6B0", 400], x: -20, y: 92, w: span(sc, VW, .25), tl: true, h: 40, cls: "tl-y56" },
         ...R(Math.ceil(span(sc, VW, .25) / 30), i => ({ a: "cloud", args: ["#FFFFFF", .8], x: i * 30 + rnd(i) * 10, y: 20 + rnd(i, 2) * 10, w: 16, cls: "drift" }))],
-      mid: [{ a: "courtBuilding", x: 70, y: 87, w: 70 }, ...R(Math.ceil(span(sc, VW, .55) / 36), i => ({ a: "palm", args: ["#3E5A38"], x: i * 36 + 8, y: 87, w: 13 }))],
+      mid: [{ a: "courtBuilding", x: 46, y: 87, w: 70 }, ...R(Math.ceil(span(sc, VW, .55) / 36), i => ({ a: "palm", args: ["#3E5A38"], x: i * 36 + 8, y: 87, w: 13 }))],
       main: [{ a: "steps", x: 112, y: 87, w: 26 }],
       fore: R(Math.ceil(span(sc, VW, 1.3) / 80), i => ({ a: "plant", args: ["#4E6B45"], x: i * 80 + 40, y: 108, w: 13 }))
     }),
@@ -202,7 +202,7 @@ const HIKAYAT = (() => {
       cliff: "ولا كلمة… بس لايكات. لحد ليلة الستوري.",
       scenes: { hall: { theme: "palace", len: 190, gk: "marble", amb: "dust",
         objs: [
-          { id: "desk", x: 26, w: 16, a: "desk", label: "مكان شغل آمنة", run: [{ say: "narr", t: "آمنة چانت تشتغل بالموقع. من هنا تشوف منو يدخل ومنو يطلع." }, { say: "amna", t: "كل يوم وجوه جديدة… بس واحد بس يرجع كل مرة.", e: "shy" }] },
+          { id: "desk", x: 26, w: 21, a: "desk", label: "مكان شغل آمنة", run: [{ say: "narr", t: "آمنة چانت تشتغل بالموقع. من هنا تشوف منو يدخل ومنو يطلع." }, { say: "amna", t: "كل يوم وجوه جديدة… بس واحد بس يرجع كل مرة.", e: "shy" }] },
           { id: "frames", x: 64, y: 70, w: 8, a: "goldFrame", args: ["#CDBBA0", false], label: "صور قاعات المكان", run: [{ photos: ["halls1", "halls2", "amna_hall"], title: "قاعات بديكور كلاسيكي", t: "من الصور المرفوعة. اسم المكان مو مكتوب عليها، فنخليه بدون تأكيد." }] },
           { id: "tripod", x: 124, w: 7, a: "tripod", label: "كاميرا عيسى", run: [{ act: [["fx", "flash"]] }, { say: "narr", t: "كل مرة نفس الشي: يركّب الكاميرا، يصوّر بهدوء، ويطلع." }, { act: [["isa", "bark", "…", 1600]] }] },
           { id: "phone", x: 168, w: 4, a: "phone", args: [true], y: 79, label: "الإنستا", flag: "likes", run: [{ say: "narr", t: "بعدين صاروا متابعين بالإنستا… وصارت بس لايكات على الستوريات، بلا حچي." }, { fx: "likes" }, { say: "amna", t: "لايك… ولايك… ولا رسالة وحدة.", e: "shy" }] }
@@ -218,7 +218,7 @@ const HIKAYAT = (() => {
         { say: "amna", t: "ما يحچي ويا أحد. أحسّه شايف نفسه شوية." },
         { act: [["cam", 0, 1200]] },
         { explore: { until: "likes", hints: [{ after: 7, who: "amna", t: "خلّي أشوف الكاميرا مالته… والتلفون على الميز هناك." }] } },
-        { puzzle: "focus", title: "لقطة من عين عيسى", intro: "عيسى چان يجي يصوّر بالقصر. انتظروا الصورة تصفى، ودوسوا الغالق — ثلاث لقطات.", scene: focusScene, need: 3, win: "ثلاث لقطات واضحة. مثل ما يسوّي هو." },
+        { puzzle: "focus", title: "لقطة من عين عيسى", intro: "عيسى چان يجي يصوّر بالقصر. انتظروا الصورة تصفى، ودوسوا الغالق — ثلاث لقطات.", vf: focusScene, need: 3, win: "ثلاث لقطات واضحة. مثل ما يسوّي هو." },
         { act: [["isa", "to", 200], ["wait", 1800]] }, { act: [["isa", "hide"]] },
         { say: "narr", t: "ويطلع… مثل كل مرة." },
         { letter: "site", title: "بعدين، كتبلها عيسى" }
@@ -242,7 +242,7 @@ const HIKAYAT = (() => {
         { act: [["cam", 120, 1600]] },
         { explore: { until: "comment", hints: [{ after: 6, who: "amna", t: "التلفون… خلّي أشوف الستوري." }] } },
         { fx: "days" },
-        { act: [["isa", "to", 86], ["amna", "to", 98], ["cam", 55, 2200]] },
+        { act: [["isa", "to", 88], ["amna", "to", 96], ["cam", 64, 2200]] },
         { act: [["isa", "face", 1], ["amna", "face", -1]] },
         { act: [["isa", "look"], ["amna", "look"]] },
         { say: "narr", t: "حسّوا شكد يشبهون بعض، وكل واحد صارح الثاني بمشاعره." },

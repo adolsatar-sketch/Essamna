@@ -47,7 +47,7 @@ const StoryEngine = (() => {
       <div class="page-inner">
         <header class="page-head"><div><h1>طريق الحكاية</h1><p class="page-sub">إحدى عشرة محطة، من أول صدفة بالقصر الروماني لحد يوم الزواج. كل محطة مكان تمشون بيه وتلمسون تفاصيله.</p></div>
           <div class="row"><button class="btn ghost sm" data-set>${IC.gear} الإعدادات</button></div></header>
-        <div class="sm-prog"><div class="prog"><i style="width:${doneN / L.length * 100}%"></i></div><span>${numSpan(doneN)} / ${numSpan(L.length)}</span></div>
+        <div class="sm-prog"><div class="prog"><i style="width:${doneN / L.length * 100}%"></i></div><span>${numSpan(doneN)} من ${numSpan(L.length)}</span></div>
         <ol class="sm-path">${L.map(node).join("")}
           <li class="sm-node end ${endOpen ? "" : "locked"}"><button class="sm-btn" data-end aria-label="النهاية${endOpen ? "" : " — مقفولة"}"><span class="sm-medal adool">${endOpen ? `<img src="${TRig.still("adool")}" alt="">` : IC.lock}</span><span class="sm-txt"><small class="sm-date">بعد الرحلة</small><b>${endOpen ? "النهاية" : "النهاية مسكّرة"}</b><span>${endOpen ? "أحد يريد يگول شي…" : `تنفتح بعد كل المحطات${prefs.openAll ? "" : " والألعاب الأساسية الثلاث"}`}</span></span></button></li>
         </ol>
@@ -310,7 +310,9 @@ const StoryEngine = (() => {
       const card = h(`<div class="tp-card tp-letter"><span class="lt-seal">${TART.symbol("letter", "#E7CB8E")}</span><h3>${esc(b.title || `رسالة ${L2.from === "غير مكتوب" ? "" : "من " + L2.from}`)}</h3><p class="pz-sub">${esc([L2.date || "التاريخ مو ظاهر باللقطة", L2.app].filter(Boolean).join(" · "))}</p><div class="lt-body">${esc(L2.text).replace(/\n/g, "<br>")}</div>${L2.note ? `<p class="note">${esc(L2.note)}</p>` : ""}<button class="btn gold" data-ok>نكمّل</button></div>`);
       TAudio.sfx("envelope");
       $("[data-ok]", card).onclick = () => card._done();
-      return overlay(card);
+      const pr = overlay(card);
+      if (auto) setTimeout(() => card._done && !over.hidden && card._done(), readMs(L2.text) * 1.4);
+      return pr;
     }
     function voice(b) {
       const paras = fill(b.t, ctx).split("\n").filter(Boolean);
@@ -335,7 +337,7 @@ const StoryEngine = (() => {
     }
     function endExplore() { mode = "idle"; pad.hidden = true; v.classList.remove("exploring"); keys.clear(); autoTarget = null; pendingObj = null; hidePrompt(); Object.values(chars).forEach(c => { if (c.anim !== "idle") setAnim(c, "idle"); }); exploreSkip = null; const r = exploreRes; exploreRes = null; r && r(); }
     let promptEl = null, near = null;
-    function showPrompt(o) { if (!promptEl) { promptEl = h(`<div class="tp-prompt"></div>`); L.main.appendChild(promptEl); } promptEl.innerHTML = `${finePointer ? '<kbd>E</kbd>' : ""}<span>${esc(fill(o.label || "المسوها", ctx))}</span>`; promptEl.style.left = o.x + "em"; promptEl.style.top = (o.y - (o.ph || o.w * .9) - 3) + "em"; promptEl.hidden = false; pad.classList.add("can-act"); }
+    function showPrompt(o) { if (!promptEl) { promptEl = h(`<div class="tp-prompt"></div>`); L.main.appendChild(promptEl); } promptEl.innerHTML = `${finePointer ? '<kbd>E</kbd>' : ""}<span>${esc(fill(o.label || "المسوها", ctx))}</span>`; promptEl.style.left = `calc(var(--u) * ${o.x})`; promptEl.style.top = `calc(var(--u) * ${o.y - (o.ph || o.w * .9) - 3})`; promptEl.hidden = false; pad.classList.add("can-act"); }
     function hidePrompt() { if (promptEl) promptEl.hidden = true; pad.classList.remove("can-act"); near = null; }
     async function interact(o) {
       if (interacting) return; interacting = true; keys.clear(); autoTarget = null; pendingObj = null; hidePrompt(); setAnim(P.c, "idle");
@@ -354,7 +356,7 @@ const StoryEngine = (() => {
     function physics(dt) {
       const c = P.c;
       // السينمائي: يمشي لوحده للشي اللي بعده
-      if (auto && !autoTarget && !pendingObj) { autoT += dt; if (autoT > .8) { autoT = 0; const nx = objs.filter(o => o.run && !o.done && !o.hidden && !o.el.hidden).sort((a, b) => Math.abs(a.x - P.x) - Math.abs(b.x - P.x))[0]; if (nx) goInteract(nx); else if (untilFlag && !ctx.flags[untilFlag]) { const z = zones.find(z => !z.fired); if (z) autoTarget = (z.x0 + z.x1) / 2; } } }
+      if (auto && !autoTarget && !pendingObj) { autoT += dt; if (autoT > .8) { autoT = 0; const it = items.filter(i => !i.got).sort((a, b) => Math.abs(a.x - P.x) - Math.abs(b.x - P.x))[0]; const nx = objs.filter(o => o.run && !o.done && !o.hidden && !o.el.hidden && (!o.need || o.need(ctx))).sort((a, b) => Math.abs(a.x - P.x) - Math.abs(b.x - P.x))[0]; if (it) autoTarget = it.x; else if (nx) goInteract(nx); else if (untilFlag && !ctx.flags[untilFlag]) { const z = zones.find(z => !z.fired); if (z) autoTarget = (z.x0 + z.x1) / 2; } } }
       let dir = (keys.has("right") ? 1 : 0) - (keys.has("left") ? 1 : 0);
       if (!dir && autoTarget != null) { const d = autoTarget - P.x; if (Math.abs(d) < .8) { autoTarget = null; if (pendingObj) { const o = pendingObj; pendingObj = null; interact(o); return; } } else dir = Math.sign(d); }
       if (dir) idleT = 0; else idleT += dt;
@@ -546,10 +548,18 @@ const StoryEngine = (() => {
       if (k === "back") leave();
       if (k === "pause") pauseMenu();
       if (k === "sound") { const on = !(prefs.music || prefs.sfx); prefs.music = on; prefs.sfx = on; savePrefs(); applyAudio(); b.innerHTML = on ? IC.sound : IC.mute; if (on) music(curMood); toastIn(on ? "الصوت شغّال" : "الصوت مكتوم", 1400); }
-      if (k === "auto") { auto = !auto; b.setAttribute("aria-pressed", auto); v.classList.toggle("auto", auto); toastIn(auto ? "عرض سينمائي: الحكاية تمشي لوحدها" : "رجع التحكم إلكم", 1800); if (auto && advanceFn) setTimeout(() => advanceFn && advanceFn(), 1500); }
+      if (k === "auto") { auto = !auto; b.setAttribute("aria-pressed", auto); v.classList.toggle("auto", auto); toastIn(auto ? "عرض سينمائي: الحكاية تمشي لوحدها" : "رجع التحكم إلكم", 1800); if (auto) setTimeout(kickAuto, 1200); }
       if (k === "skip") { const f = skipFn || (mode === "explore" ? exploreSkip : null); if (f) { TAudio.sfx("page"); f(); } }
     });
 
+    // لما يتفعّل العرض التلقائي بنص خطوة: كمّل الشي اللي ينتظر
+    function kickAuto() {
+      if (!auto || paused) return;
+      if (advanceFn) return advanceFn();
+      const nb = $(".tp-narr:not([hidden]) .tl-btn:not([hidden])", v); if (nb) return nb.click();
+      const ok = $(".tp-over:not([hidden]) [data-ok]", v); if (ok) return ok.click();
+      const sk = $(".tp-over:not([hidden]) [data-skip]", v); if (sk) return sk.click();
+    }
     /* ----- الحلقة ----- */
     function render() { layoutParallax(); }
     function frame(now) {
