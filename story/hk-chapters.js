@@ -122,6 +122,35 @@ const HIKAYAT = (() => {
       main: [{ a: "mannequin", x: 70, y: 87, w: 7 }, { a: "rugRound", args: ["#5A3A2E"], x: 132, y: 88.5, w: 30 }],
       fore: []
     }),
+    // ليلة الخطوبة: حديقة بالليل، فوانيس وأضواء ونوافير نار
+    engagement: (sc, VW) => ({
+      far: [{ a: "stars", args: [70], x: -20, y: 2, w: span(sc, VW, .25), h: 40, tl: true },
+        { a: "cityNight", args: [800], x: -20, y: 52, w: span(sc, VW, .25), h: 34, tl: true, o: .6 }],
+      mid: [{ a: "stringLights", args: [800], x: -20, y: 16, w: span(sc, VW, .55), h: 12, tl: true },
+        ...R(Math.ceil(span(sc, VW, .55) / 30), i => ({ a: "lanternHang", args: [["#F6C86A", "#F2A07A"][i % 2]], x: i * 30 + 15, y: 38 + rnd(i) * 6, w: 3.2, cls: "swing" })),
+        ...R(Math.ceil(span(sc, VW, .55) / 45), i => ({ a: "palm", args: ["#1E1E2A"], x: i * 45 + 22, y: 87, w: 14 }))],
+      main: [{ a: "tableRound", x: 70, y: 87, w: 20 }, { a: "roses", args: ["#E9C2C8"], x: 70, y: 78, w: 6 }],
+      fore: R(Math.ceil(span(sc, VW, 1.3) / 60), i => ({ a: "plant", args: ["#24302A"], x: i * 60 + 30, y: 110, w: 14, o: .95 }))
+    }),
+    // الزفاف المنتظر: غروب، المكان يتجهّز — قوس ورد، كراسي، أضواء بعدها مطفية
+    weddingPrep: (sc, VW) => ({
+      far: [{ a: "hills", args: ["#5A3E5A", "#7A4E62", 400], x: -20, y: 92, w: span(sc, VW, .25), tl: true, h: 34, cls: "tl-y58" },
+        { a: "cityNight", args: [800], x: -20, y: 56, w: span(sc, VW, .25), h: 30, tl: true, o: .45 }],
+      mid: [{ a: "stringLights", args: [800], x: -20, y: 18, w: span(sc, VW, .55), h: 12, tl: true, cls: "unlit", id: "prepLights" },
+        ...R(Math.ceil(span(sc, VW, .55) / 45), i => ({ a: "palm", args: ["#3A2A3A"], x: i * 45 + 22, y: 87, w: 14, o: .9 }))],
+      main: [{ a: "flowerArch", x: sc.archX || (sc.len - 20), y: 87, w: 26 }],
+      fore: R(Math.ceil(span(sc, VW, 1.3) / 60), i => ({ a: "plant", args: ["#3A3A30"], x: i * 60 + 30, y: 110, w: 14, o: .95 }))
+    }),
+    // «كلمة من عدول»: حديقة هادية بالليل، أضواء وفوانيس — بلا قوس ولا كراسي (الزفاف بعده ما صار)
+    adoolGarden: (sc, VW) => ({
+      far: [{ a: "stars", args: [70], x: -20, y: 2, w: span(sc, VW, .25), h: 40, tl: true },
+        { a: "cityNight", args: [800], x: -20, y: 54, w: span(sc, VW, .25), h: 32, tl: true, o: .5 }],
+      mid: [{ a: "stringLights", args: [800], x: -20, y: 16, w: span(sc, VW, .55), h: 12, tl: true },
+        ...R(Math.ceil(span(sc, VW, .55) / 30), i => ({ a: "lanternHang", args: [["#F6C86A", "#F2A07A"][i % 2]], x: i * 30 + 15, y: 38 + rnd(i) * 6, w: 3.2, cls: "swing" })),
+        ...R(Math.ceil(span(sc, VW, .55) / 45), i => ({ a: "palm", args: ["#1E1E2A"], x: i * 45 + 22, y: 87, w: 14 }))],
+      main: [],
+      fore: R(Math.ceil(span(sc, VW, 1.3) / 60), i => ({ a: "plant", args: ["#24302A"], x: i * 60 + 30, y: 110, w: 14, o: .95 }))
+    }),
     // ليلة الزواج: حديقة، أضواء، قوس ورد ونوافير نار
     wedding: (sc, VW) => ({
       far: [{ a: "stars", args: [70], x: -20, y: 2, w: span(sc, VW, .25), h: 40, tl: true },
@@ -148,13 +177,44 @@ const HIKAYAT = (() => {
     lightsDown: async api => { api.stage.classList.add("dim"); api.TAudio.sfx("soft"); },
     doorOpen: async api => { const d = api.getObj("door"); api.TAudio.sfx("keys"); await api.wait(500); api.TAudio.sfx("door"); if (d) api.updObj("door", { args: [1], cls: "opened" }); api.stage.classList.add("doorlight"); await api.wait(1200); },
     furnish: async api => { const ids = ["plant", "sofa", "table", "lamp", "art"]; for (const id of ids) { const el = q(api, id); if (el) { el.classList.add("in"); api.TAudio.sfx("pick"); await api.wait(380); } } },
-    bouquet: async api => { const a = api.chars.amna; if (!a) return; const el = api.deco({ a: "bouquetYellow", x: a.x - 2.5, y: a.y - 9, w: 7, cls: "gift-in" }, "main"); api.TAudio.sfx("sparkle"); await api.wait(800); },
+    // الباقة بإيدها (صورتها المنفردة: الإيد بحدود 14em فوق الأرض)
+    bouquet: async api => { const a = api.chars.amna; if (!a) return; const el = api.deco({ a: "bouquetYellow", x: a.x - 3.4 * (a.face || 1), y: a.y - 10.5, w: 7, cls: "gift-in" }, "main"); api.TAudio.sfx("sparkle"); await api.wait(800); },
     sparks: async api => { api.stage.classList.add("sparking"); api.TAudio.sfx("firework"); await api.wait(1600); },
     fireworks: async api => { if (!api.motionOK()) { api.TAudio.sfx("cheer"); return; } const box = h(`<div class="fx-fireworks">${R(6, i => `<span style="left:${10 + rnd(i) * 80}%;top:${8 + rnd(i, 3) * 30}%;--d:${i * .45}s">${TART.firework(["#FFD48A", "#F2A07A", "#E7CB8E", "#FFFFFF"][i % 4])}</span>`).join("")}</div>`); api.v.appendChild(box); for (let i = 0; i < 4; i++) { api.TAudio.sfx("firework"); await api.wait(700); } api.TAudio.sfx("cheer"); await api.wait(1400); box.classList.add("out"); setTimeout(() => box.remove(), 900); },
-    adoolCard: api => new Promise(res => {
-      const card = h(`<div class="fx-adool" role="dialog" aria-label="رسالة عدول"><div class="fa-card"><img src="${TRig.still("adool")}" alt="عدول"><span class="fa-tag">عدول</span><p>${esc(CONFIG.adoolLine)}</p><button class="btn gold">نكمّل</button></div></div>`);
-      api.v.appendChild(card); api.TAudio.sfx("sparkle");
-      $("button", card).onclick = () => { card.classList.add("out"); setTimeout(() => { card.remove(); res(); }, 450); };
+    inviteCard: api => new Promise(res => {
+      const d = daysToWedding();
+      const card = h(`<div class="fx-invite" role="dialog" aria-label="بطاقة الموعد"><div class="fi-card"><small>يوم الزفاف</small><b>عيسى و آمنة</b><span class="fi-date num">30/10/2026</span><p>${d > 1 ? `باقي ${d} ${d <= 10 ? "أيام" : "يوم"}` : d === 1 ? "باچر!" : d === 0 ? "اليوم!" : "يوم الزفاف"}</p><button class="btn gold">تمام</button></div></div>`);
+      api.v.appendChild(card); api.TAudio.sfx("envelope");
+      let shut = false; const close = () => { if (shut) return; shut = true; card.classList.add("out"); setTimeout(() => { card.remove(); res(); }, 400); };
+      card.querySelector("button").onclick = close; if (api.auto) setTimeout(close, 4200);
+    }),
+    lightsPreview: async api => { api.stage.classList.add("prep-lit"); api.TAudio.sfx("sparkle"); await api.wait(1800); api.stage.classList.remove("prep-lit"); },
+    // عدول يحچي داخل المشهد: فقاعة كلام فوق راسه، الكلمات تطلع وحدة وحدة ويا حركة راسه (مو نافذة منبثقة)
+    adoolSpeech: api => new Promise(async res => {
+      const a = api.chars.adool, line = CONFIG.adoolLine, words = line.split(" ");
+      const box = h(`<div class="adool-say" role="status" aria-live="polite" aria-label="${esc(line)}"><span class="as-name">عدول</span><p>${words.map((w, i) => `<span class="w">${esc(w)}</span>`).join(" ")}</p><button class="btn gold sm" hidden>نكمّل</button><i class="as-tail"></i></div>`);
+      api.stage.appendChild(box);
+      // الفقاعة فوق روس الكل (حتى ما تغطي وجوه عيسى وآمنة)، وذيلها ينزل لراس عدول
+      const place = () => { const rig = a && a.el.querySelector(".rig"); if (!rig) return; const sr = api.stage.getBoundingClientRect(), rr = rig.getBoundingClientRect(), W = box.offsetWidth;
+        const tops = Object.values(api.chars).filter(c => c.vis && c.el.querySelector(".rig")).map(c => c.el.querySelector(".rig").getBoundingClientRect().top);
+        const by = Math.max(sr.top + 70 + box.offsetHeight, Math.min(rr.top - 12, Math.min(...tops) - 16));
+        const mid = rr.left + rr.width / 2 - sr.left, left = Math.max(10, Math.min(sr.width - W - 10, mid - W / 2));
+        box.style.left = left + "px"; box.style.bottom = (sr.bottom - by) + "px";
+        box.style.setProperty("--tx", Math.max(22, Math.min(W - 22, mid - left)) + "px"); box.style.setProperty("--th", Math.max(12, rr.top + rr.height * .04 - by) + "px"); };
+      place(); addEventListener("resize", place);
+      const sp = [...box.querySelectorAll(".w")];
+      let fast = !api.motionOK();
+      box.onclick = () => { fast = true; };
+      api.TAudio.sfx("soft");
+      for (let i = 0; i < sp.length; i++) {
+        sp[i].classList.add("on");
+        if (i % 2 === 0 && a) TRig.nod(a);
+        if (!fast) await api.wait(260 + words[i].length * 45);
+      }
+      sp.forEach(x => x.classList.add("on"));
+      const btn = box.querySelector("button"); btn.hidden = false; place();
+      let shut = false; const close = () => { if (shut) return; shut = true; removeEventListener("resize", place); box.classList.add("out"); setTimeout(() => { box.remove(); res(); }, 420); };
+      btn.onclick = e => { e.stopPropagation(); close(); }; if (api.auto) setTimeout(close, 5200);
     })
   };
 
@@ -185,7 +245,10 @@ const HIKAYAT = (() => {
     empty: "linear-gradient(180deg,#F6F1E8 0%,#FFFFFF 100%)",
     gold: "linear-gradient(180deg,#E8D7B2 0%,#F4E8CF 100%)",
     tailor: "linear-gradient(180deg,#2B211C 0%,#3B2E26 100%)",
-    wedding: "linear-gradient(180deg,#0B0E22 0%,#1E1A3A 50%,#3A2340 85%,#6A3A3A 100%)"
+    wedding: "linear-gradient(180deg,#0B0E22 0%,#1E1A3A 50%,#3A2340 85%,#6A3A3A 100%)",
+    engagement: "linear-gradient(180deg,#120F2A 0%,#2A1E44 50%,#4A2A4A 85%,#6E3E44 100%)",
+    adool: "linear-gradient(180deg,#141832 0%,#2C2648 50%,#5A3A54 85%,#8A5250 100%)",
+    prep: "linear-gradient(180deg,#2E2A4E 0%,#6E4E6E 40%,#D98E6E 78%,#F2C48A 100%)"
   };
 
   // مشهد الكاميرا للعبة «لقطة عيسى» (قاعة كلاسيكية صغيرة)
@@ -204,8 +267,8 @@ const HIKAYAT = (() => {
         objs: [
           { id: "desk", x: 26, w: 21, a: "desk", label: "مكان شغل آمنة", run: [{ say: "narr", t: "آمنة چانت تشتغل بالموقع. من هنا تشوف منو يدخل ومنو يطلع." }, { say: "amna", t: "كل يوم وجوه جديدة… بس واحد بس يرجع كل مرة.", e: "shy" }] },
           { id: "frames", x: 64, y: 70, w: 8, a: "goldFrame", args: ["#CDBBA0", false], label: "صور قاعات المكان", run: [{ photos: ["halls1", "halls2", "amna_hall"], title: "قاعات بديكور كلاسيكي", t: "من الصور المرفوعة. اسم المكان مو مكتوب عليها، فنخليه بدون تأكيد." }] },
-          { id: "tripod", x: 124, w: 7, a: "tripod", label: "كاميرا عيسى", run: [{ act: [["fx", "flash"]] }, { say: "narr", t: "كل مرة نفس الشي: يركّب الكاميرا، يصوّر بهدوء، ويطلع." }, { act: [["isa", "bark", "…", 1600]] }] },
-          { id: "phone", x: 168, w: 4, a: "phone", args: [true], y: 79, label: "الإنستا", flag: "likes", run: [{ say: "narr", t: "بعدين صاروا متابعين بالإنستا… وصارت بس لايكات على الستوريات، بلا حچي." }, { fx: "likes" }, { say: "amna", t: "لايك… ولايك… ولا رسالة وحدة.", e: "shy" }] }
+          { id: "tripod", x: 124, w: 7, a: "tripod", label: "كاميرا عيسى", run: [{ act: [["fx", "flash"]] }, { say: "narr", t: "كل مرة نفس الشي: يركّب الكاميرا، يصوّر بهدوء، ويطلع." }] },
+          { id: "phone", x: 168, w: 4, a: "phone", args: [true], y: 79, label: "الإنستا", flag: "likes", run: [{ say: "narr", t: "بعدين عيسى ضافها بالإنستا… وصارت بيناتهم بس لايكات على الستوري. لا رسائل، ولا حچي." }, { fx: "likes" }, { say: "amna", t: "لايك… ولايك… ولا رسالة وحدة.", e: "shy" }] }
         ],
         deco: [{ a: "desk", x: 168, y: 86.5, w: 14 }]
       } },
@@ -216,16 +279,19 @@ const HIKAYAT = (() => {
         { act: [["fx", "flash"], ["wait", 500]] }, { act: [["fx", "flash"]] },
         { say: "amna", t: "هذا نفس الولد… يجي، يصوّر، ويطلع.", e: "look" },
         { say: "amna", t: "ما يحچي ويا أحد. أحسّه شايف نفسه شوية." },
-        { act: [["cam", 0, 1200]] },
-        { explore: { until: "likes", hints: [{ after: 7, who: "amna", t: "خلّي أشوف الكاميرا مالته… والتلفون على الميز هناك." }] } },
+        // نظرات من بعيد — بدون ولا كلمة
+        { act: [["isa", "look"], ["amna", "look"], ["wait", 1400]] },
+        { say: "narr", t: "نظرات من بعيد… وولا كلمة وحدة بيناتهم." },
         { puzzle: "focus", title: "لقطة من عين عيسى", intro: "عيسى چان يجي يصوّر بالقصر. انتظروا الصورة تصفى، ودوسوا الغالق — ثلاث لقطات.", vf: focusScene, need: 3, win: "ثلاث لقطات واضحة. مثل ما يسوّي هو." },
         { act: [["isa", "to", 200], ["wait", 1800]] }, { act: [["isa", "hide"]] },
         { say: "narr", t: "ويطلع… مثل كل مرة." },
-        { letter: "site", title: "بعدين، كتبلها عيسى" }
+        { act: [["cam", 0, 1200]] },
+        // بعدها: عيسى يضيفها بالإنستا، ولايكات بس (بدون رسائل بهالمرحلة)
+        { explore: { until: "likes", hints: [{ after: 7, who: "amna", t: "التلفون على الميز هناك…" }] } }
       ] },
 
     /* 2 ----------------------------------------------------------------- */
-    { id: "story", title: "أول رسالة", dateLabel: "بداية الحكاية", place: "ستوري العرسان", icon: "letter", color: ["#2C2F4C", "#B9A0B7"], sky: SKY.night, theme: M.night,
+    { id: "story", title: "أول تعليق",  dateLabel: "بداية الحكاية", place: "ستوري العرسان", icon: "letter", color: ["#2C2F4C", "#B9A0B7"], sky: SKY.night, theme: M.night,
       lead: "ستوري نزّله عيسى بالليل عن عرسان غريبي الأطوار صوّرهم. آمنة علّقت، ومن هناك بلشوا يحچون — صدفة ملخبطة تحوّلت لأحلى صدفة.",
       photos: ["story_bw"],
       cliff: "صدفة ملخبطة… صارت أحلى صدفة.",
@@ -246,18 +312,40 @@ const HIKAYAT = (() => {
         { act: [["isa", "face", 1], ["amna", "face", -1]] },
         { act: [["isa", "look"], ["amna", "look"]] },
         { say: "narr", t: "حسّوا شكد يشبهون بعض، وكل واحد صارح الثاني بمشاعره." },
-        { voice: true, title: "علاقتنا…", t: "علاقتنا چانت غريبة، بس حلوة بنفس الوقت… بدت بصدفة بالقصر الروماني. عيسى چان يجي يصوّر، وآني چنت أشتغل بالموقع. بالبداية ما چان بيناتنا أي حچي؛ أشوفه يجي يصوّر ويطلع، وكنت أحسّه شايف نفسه لأن ما يحچي ويا أحد.\nبعدين شفت ستوري إله، وضفته بالإنستا، وصارت بس لايكات على الستوريات… لحد ذاك اليوم اللي نشر بيه ستوري عن عرسان غريبي الأطوار صوّرهم. علّقتله، ومن هناك بلشنا نحچي.\nبأيام بسيطة، يمكن ما كملت عشرة أيام، حسّينا شكد نشبه بعض، وكل واحد صارح الثاني بمشاعره. من يوم 16/1 لهسه، أحسها أحلى صدفة صارت بحياتي." }
+        { voice: true, title: "علاقتنا…", t: "علاقتنا چانت غريبة، بس حلوة بنفس الوقت… بدت بصدفة بالقصر الروماني. عيسى چان يجي يصوّر، وآني چنت أشتغل بالموقع. بالبداية ما چان بيناتنا أي حچي؛ أشوفه يجي يصوّر ويطلع، وكنت أحسّه شايف نفسه لأن ما يحچي ويا أحد.\nبعدين عيسى ضافني بالإنستا، وصارت بس لايكات على الستوريات… لحد ذاك اليوم اللي نشر بيه ستوري عن عرسان غريبي الأطوار صوّرهم. علّقتله، ومن هناك بلشنا نحچي.\nبأيام بسيطة، يمكن ما كملت عشرة أيام، حسّينا شكد نشبه بعض، وكل واحد صارح الثاني بمشاعره. من يوم 16/1 لهسه، أحسها أحلى صدفة صارت بحياتي." },
+        // رسالة عيسى عن «الصدفة اللي خلتني أجي للموقع» — بعد ما صار بيناتهم حچي، مو بأول يوم. تاريخها مو معروف.
+        { letter: "site", title: "بعد ما صار بيناتهم حچي… كتبلها عيسى" }
       ] },
 
     /* 3 ----------------------------------------------------------------- */
+    { id: "engagement", title: "يوم خطوبتهم", dateLabel: "13/2/2026", place: "الخطوبة", icon: "ring", color: ["#5A3A5A", "#E7CB8E"], sky: SKY.engagement, theme: M.celebrate,
+      lead: "13/2/2026 — يوم خطوبتهم. إطار «وخلقناكم أزواجاً» مكتوب بيه نفس التاريخ، وخواتم، وليلة احتفال.",
+      photos: ["frame", "hands_rings", "fire1", "fire2", "fire3"],
+      cliff: "خطوبة… والطريق للزواج بلّش.",
+      scenes: { night: { theme: "engagement", len: 190, gk: "grassnight", amb: "glow",
+        objs: [
+          { id: "frame", x: 52, y: 72, w: 8, a: "goldFrame", args: ["#E8DDC8", false], label: "«وخلقناكم أزواجاً»", run: [{ photos: ["frame"], title: "«وخلقناكم أزواجاً»", t: "مكتوب بالإطار: «لقد تم العقد… بتاريخ 13 فبراير 2026»، وتحته Eisa و Amna." }] },
+          { id: "rings", x: 92, y: 80, w: 4.6, a: () => TART.symbol("ring", "#E7CB8E"), label: "الخواتم", run: [{ act: [["sfx", "sparkle"], ["pair", "look"]] }, { photos: ["hands_rings"], title: "الخواتم", t: "إيدين بخواتم فوق باقة مكتوب عليها «انا فعلاً عرفت اختار». اليوم مو مكتوب على الصورة." }] },
+          { id: "f1", x: 120, w: 4, a: "fountain", label: "نافورة نار", run: [{ fx: "sparks" }] },
+          { id: "cele", x: 150, y: 72, w: 8, a: "goldFrame", args: ["#5A3A3A", false], label: "ليلة الاحتفال", flag: "cele", run: [{ photos: ["fire1", "fire2", "fire3"], title: "ليلة الاحتفال", t: "صور احتفال بألعاب نارية. اليوم بالضبط مو مكتوب على الصور نفسها." }] },
+          { id: "f2", x: 172, w: 4, a: "fountain", label: "نافورة نار", run: [{ fx: "sparks" }] }
+        ] } },
+      beats: [
+        { scene: "night", cast: { pair: [16] }, player: "pair", cam: 0 },
+        { cine: true, narr: "13/2/2026 · يوم خطوبتهم.", btn: "نمشي" },
+        { explore: { until: "cele", hints: [{ after: 7, t: "الإطار والخواتم بالطريق…" }] } },
+        { act: [["pair", "joy"], ["fx", "fireworks"]] },
+        { calm: true, t: "13/2/2026 — يوم خطوبتهم. وباچر بعده، أول عيد حب سوه." }
+      ] },
+
+    /* 4 -----------------------------------------------------------------  */
     { id: "valentine", title: "أول عيد حب سوه", dateLabel: "14/2/2026", place: "لحظة إلهم", icon: "heart", color: ["#7A4A5C", "#E09A6A"], sky: SKY.evening, theme: M.tender,
       lead: "أول ١٤ شباط وهم سوه — لحظة هادية وخاصة إلهم الاثنين.",
-      photos: ["frame", "hands_rings"],
+      photos: [],
       cliff: "أول ١٤ شباط… وهم سوه.",
       scenes: { eve: { theme: "evening", len: 170, gk: "terrace", amb: "glow",
         objs: [
           { id: "candles", x: 62, w: 3.4, a: "candle", args: [24], label: "ولّعوا الشموع", run: [{ fx: "candlesOn" }, { say: "narr", t: "ضوّة صغيرة… تكفي." }] },
-          { id: "frame", x: 98, y: 72, w: 8, a: "goldFrame", args: ["#E8DDC8", false], label: "«وخلقناكم أزواجاً»", run: [{ photos: ["frame", "hands_rings"], title: "«وخلقناكم أزواجاً»", t: "مكتوب بالإطار: «لقد تم العقد… بتاريخ 13 فبراير 2026»، وتحته Eisa و Amna." }] },
           { id: "table", x: 128, w: 22, a: "tableRound", ph: 6, label: "الطاولة", flag: "table", run: [{ act: [["pair", "to", 120]] }, { act: [["pair", "look"]] }] }
         ] } },
       beats: [
@@ -402,41 +490,40 @@ const HIKAYAT = (() => {
         { calm: true, t: "قدّام المراية… باقي كم يوم. (ما عدنا صورة من هذا اليوم بعد — تگدرون تضيفونها بحائط ذكرياتنا.)" }
       ] },
 
-    /* 11 ---------------------------------------------------------------- */
-    { id: "wedding", title: "يوم الزواج", dateLabel: "30/10/2026", place: "الموعد اللي تمشي له الحكاية", icon: "ring", color: ["#3A2340", "#E0703A"], sky: SKY.wedding, theme: M.celebrate,
-      lead: "هنا تنتهي الطريق… وتبدي الحكاية الأحلى.",
-      photos: ["fire1", "fire2", "fire3", "shoot_garden", "proposal"],
-      cliff: "هنا ما تخلص الحكاية… هنا تبدي.",
-      scenes: { garden: { theme: "wedding", len: 210, gk: "grassnight", amb: "sparks", archX: 192,
+    /* 12 ---------------------------------------------------------------- */
+    { id: "wedding", title: "يوم الزفاف — الموعد المنتظر", dateLabel: "30/10/2026 · قريباً", place: "الموعد المنتظر", icon: "ring", color: ["#3A2D4A", "#C98B8B"], sky: SKY.prep, theme: M.tender,
+      lead: "يوم الزفاف محدد بـ 30/10/2026 — وبعده ما صار. هنا المكان يتجهّز، والأيام تنعد.",
+      photos: [],
+      cliff: c => { const d = daysToWedding(); return d > 1 ? `باقي ${d} ${d <= 10 ? "أيام" : "يوم"}… والموعد يقرب.` : d === 1 ? "باچر الموعد." : d === 0 ? "اليوم الموعد." : "30/10/2026 — يوم الزفاف."; },
+      scenes: { prep: { theme: "weddingPrep", len: 200, gk: "grassdusk", amb: "petals", archX: 178,
         objs: [
-          { id: "f1", x: 58, w: 4, a: "fountain", label: "نافورة نار", run: [{ fx: "sparks" }] },
-          { id: "drum", x: 86, w: 5, a: "drum", label: "الزفة", run: [{ act: [["sfx", "cheer"], ["pair", "joy"]] }, { say: "narr", t: "طبل وهلاهل… الزفة." }] },
-          { id: "cele", x: 118, y: 72, w: 7, a: "goldFrame", args: ["#5A3A3A", false], label: "من احتفالاتنا", run: [{ photos: ["fire1", "fire2", "fire3"], title: "من احتفالاتنا", t: "صور احتفال وألعاب نارية. المناسبة والتاريخ غير محددين بالصور." }] },
-          { id: "trip", x: 152, y: 72, w: 7, a: "goldFrame", args: ["#E8DDC8", false], label: "من رحلتنا", run: [{ photos: ["shoot_garden", "shoot_roses", "shoot_tree", "shoot_bw", "proposal", "shoot_sunset"], title: "من رحلتنا", t: "صور سوه. تواريخها غير معروفة." }] },
-          { id: "f2", x: 172, w: 4, a: "fountain", label: "نافورة نار", run: [{ fx: "sparks" }] },
-          { id: "arch", x: 192, w: 16, ph: 26, a: () => "", label: "تحت القوس", flag: "arch", run: [{ act: [["pair", "to", 192]] }] }
+          { id: "invite", x: 46, y: 80, w: 6, a: () => TART.symbol("letter", "#FBF3E2"), label: "بطاقة الموعد", run: [{ fx: "inviteCard" }] },
+          { id: "lights", x: 96, y: 78, w: 4, a: "lanternHang", args: ["#F6C86A"], label: "الأضواء", run: [{ fx: "lightsPreview" }, { say: "narr", t: "الأضواء معلّقة… تنتظر ليلتها." }] },
+          { id: "chairs", x: 132, w: 22, a: "weddingChairs", label: "مكان الضيوف", run: [{ say: "pair", t: "هنا راح يگعدون أهلنا وحبايبنا.", e: "look" }] },
+          { id: "arch", x: 178, w: 16, ph: 26, a: () => "", label: "تحت القوس", flag: "arch", run: [{ act: [["pair", "to", 176]] }] }
         ] } },
       beats: [
-        { scene: "garden", cast: { pair: [14] }, player: "pair", cam: 0 },
-        { cine: true, narr: c => { const d = daysToWedding(); return `30/10/2026 · يوم الزواج. ${d > 1 ? `باقي ${d} يوم على الموعد.` : d === 1 ? "باچر الموعد!" : d === 0 ? "اليوم الموعد!" : "صار… مبروك!"}`; }, btn: "الزفة" },
+        { scene: "prep", cast: { pair: [14] }, player: "pair", cam: 0 },
+        { cine: true, narr: c => { const d = daysToWedding(); return `30/10/2026 · يوم الزفاف — الموعد المنتظر. ${d > 1 ? `باقي ${d} ${d <= 10 ? "أيام" : "يوم"}.` : d === 1 ? "باچر!" : d === 0 ? "اليوم!" : ""}`; }, btn: "نشوف المكان" },
         { explore: { until: "arch", hints: [{ after: 7, t: "القوس بآخر الطريق…" }] } },
-        { act: [["pair", "look"], ["fx", "fireworks"]] },
-        { calm: true, t: "من 16/1 لهنا. هنا ما تخلص الحكاية… هنا تبدي." }
+        { act: [["pair", "look"], ["fx", "lightsPreview"]] },
+        { calm: true, t: c => { const d = daysToWedding(); return d > 0 ? `باقي ${d} ${d <= 10 ? "أيام" : "يوم"}. الحكاية كلها تمشي لهذا اليوم… وبعده تبدي حكاية جديدة.` : "30/10/2026 — يوم الزفاف."; } }
       ] }
   ];
 
-  /* ---------------- النهاية: عدول (بعد الرحلة فقط) ---------------- */
-  const ending = { id: "ending", title: "النهاية", dateLabel: "بعد الرحلة", place: "", sky: SKY.wedding, theme: M.celebrate,
-    scenes: { night: { theme: "wedding", len: 150, gk: "grassnight", amb: "sparks", archX: 60 } },
+  /* ---------------- فصل إضافي: «كلمة من عدول» — ينفتح بس بعد ما تخلص كل المحطات ---------------- */
+  const ending = { id: "ending", title: "كلمة من عدول", dateLabel: "فصل إضافي", place: "بعد ما خلصت الحكاية", sky: SKY.adool, theme: M.tender,
+    scenes: { garden: { theme: "adoolGarden", len: 150, gk: "grassnight", amb: "glow" } },
     beats: [
-      { scene: "night", cast: { pair: [60, null, 1], adool: [140, null, -1, "hide"] }, player: "pair", cam: c => 20 },
-      { cine: true, narr: "خلصت الرحلة… بس أحد صغير جاي يركض من طرف الحديقة." },
-      { act: [["adool", "show"], ["adool", "to", 88, { speed: 20 }]] },
-      { act: [["adool", "wave", 1800], ["pair", "look"]] },
-      { act: [["adool", "greet"], ["wait", 700]] },
-      { say: "adool", t: CONFIG.adoolLine, e: "greet" },
-      { fx: "adoolCard" },
-      { act: [["pair", "joy"], ["fx", "fireworks"]] }
+      // عيسى وآمنة يسار الكادر، وعدول يدخل من الحافة اليمنى (برّا الكادر) ويوگف يمهم — على الهاتف والكمبيوتر
+      { scene: "garden", cast: { pair: [60, null, 1], adool: [140, null, -1, "hide"] }, player: "pair", cam: VW => Math.max(0, 60 - VW * .36) },
+      { cine: true, narr: "فصل إضافي · كلمة من عدول. خلصت حكاية عيسى وآمنة… بس أحد صغير جاي يركض من طرف الحديقة.", btn: "منو جاي؟" },
+      { act: [["adool", "show"], ["adool", "to", 79, { speed: 20 }]] },
+      { act: [["pair", "look"], ["adool", "wave", 2000]] },
+      { act: [["adool", "greet"], ["wait", 800]] },
+      { fx: "adoolSpeech" },
+      { act: [["pair", "joy"], ["adool", "greet"], ["sfx", "sparkle"], ["wait", 1400]] },
+      { calm: true, t: "عيسى وآمنة… والموعد المنتظر 30/10/2026. والحكاية بعدها تبدي." }
     ] };
 
   return { stations, ending, themes, fx, itemArt, barks, winLines, audio: {} };

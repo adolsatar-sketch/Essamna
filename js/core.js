@@ -9,7 +9,7 @@ const CONFIG = {
   weddingISO: "2026-10-30T00:00:00",
   weddingLabel: "30/10/2026",
   firstMeet: "16/1",
-  adoolLine: "عدول يتمنالكم زواج سعيد. يارب حبكم يزيد كل يوم أضعاف، وأتمنالكم حياة سعيدة ومليانة حب وسعادة.",
+  adoolLine: "عدول يتمنالكم زواج سعيد، يارب دوم السعادة والحياة السعيدة.",
   coreGames: ["memory", "puzzle", "camera"]
 };
 
@@ -117,7 +117,7 @@ const Progress = {
   get games() { return Store.get("games", {}); },
   stationsDone() { const d = this.story.done; return HIKAYAT.stations.filter(s => d[s.id]).length; },
   coreWon() { const g = this.games; return CONFIG.coreGames.filter(id => g[id] && g[id].won).length; },
-  endingOpen() { return this.stationsDone() === HIKAYAT.stations.length && (prefs.openAll || this.coreWon() === CONFIG.coreGames.length); }
+  endingOpen() { return this.stationsDone() === HIKAYAT.stations.length; },   // «كلمة من عدول»: بعد ما تخلص الحكاية كلها
 };
 
 /* ============ الراوتر ============ */
@@ -154,7 +154,7 @@ function openSettings() {
     <div class="set-row"><div><b>تقليل الحركة</b><small>${sysReduce.matches ? "جهازكم مفعّل عليه تقليل الحركة." : "يوقف الحركات الكبيرة والانتقالات."}</small></div>${sw("calm", prefs.calm || sysReduce.matches)}</div>
     <div class="set-row"><div><b>نص الحوار تحت المشهد</b><small>الحوار يبقى مكتوب دائماً.</small></div>${sw("subs", prefs.subs)}</div>
     <div class="set-row"><div><b>أزرار الحركة بالحكاية</b><small>اللمس على المكان يكفي للمشي؛ هذا يضيف أسهم صغيرة.</small></div>${sw("pad", prefs.pad)}</div>
-    <div class="set-row"><div><b>إتاحة الحكاية كاملة</b><small>تفتح كل المحطات بأي ترتيب، والنهاية ما تحتاج الفوز بالألعاب (تحتاج بس إكمال المحطات).</small></div>${sw("openAll", prefs.openAll)}</div>
+    <div class="set-row"><div><b>إتاحة الحكاية كاملة</b><small>تفتح كل المحطات بأي ترتيب. فصل «كلمة من عدول» يبقى ينفتح بس بعد إكمال كل المحطات.</small></div>${sw("openAll", prefs.openAll)}</div>
     <h3 style="margin-top:18px">الخصوصية والنسخ الاحتياطي</h3>
     <p class="note">كل شي — تقدّم الحكاية والألعاب وذكريات الحائط وصورها — محفوظ بهذا المتصفح على هذا الجهاز فقط، وما يتزامن تلقائياً ويا أجهزة ثانية. حتى تنقلونه: صدّروا نسخة احتياطية واستوردوها بالجهاز الثاني.</p>
     <div class="row"><button class="btn gold sm" data-exp>${IC.save} تصدير نسخة احتياطية</button><label class="btn line sm" style="cursor:pointer">${IC.upload} استيراد نسخة<input type="file" accept="application/json,.json" data-imp hidden></label></div>
@@ -218,7 +218,7 @@ function heroSkyline() {
 function viewHome(root) {
   const st = Progress.story, done = Progress.stationsDone(), N = HIKAYAT.stations.length, d = daysToWedding();
   const next = HIKAYAT.stations.find(s => !st.done[s.id]);
-  const countdown = d > 0 ? `<span class="days">باقي ${numSpan(d)} ${d === 1 ? "يوم" : d <= 10 ? "أيام" : "يوم"}</span>` : d === 0 ? `<span class="days">اليوم!</span>` : `<span class="days">مبروك</span>`;
+  const countdown = d > 0 ? `<span class="days">باقي ${numSpan(d)} ${d === 1 ? "يوم" : d <= 10 ? "أيام" : "يوم"}</span>` : d === 0 ? `<span class="days">اليوم!</span>` : `<span class="days">${numSpan(CONFIG.weddingLabel)}</span>`;
   const v = h(`<section class="home view noselect">
     <div class="home-hero">
       <div class="hh-sky"></div>
@@ -228,8 +228,8 @@ function viewHome(root) {
       <div class="hh-title"><span class="kick">من ${numSpan(CONFIG.firstMeet)} لـ ${numSpan(CONFIG.weddingLabel)}</span><h1>حكايتنا</h1><p>${esc(CONFIG.isa)} و${esc(CONFIG.amna)} — صدفة ملخبطة بالقصر الروماني، صارت أحلى صدفة.</p></div>
       <div class="hh-cast"><div class="hc" data-pair>${TRig.html("pair")}</div></div>
       <div class="hh-panel">
-        <div class="hh-count"><b>${d > 0 ? "لموعد الزواج" : d === 0 ? "يوم الزواج" : "تزوّجوا"}</b>${countdown}</div>
-        <div><div class="prog" aria-label="${done} من ${N} محطة"><i style="width:${done / N * 100}%"></i></div><p class="note" style="margin:6px 0 0">${done ? `خلصتوا ${numSpan(done)} من ${numSpan(N)} محطة` : `${numSpan(N)} محطة من أول صدفة لحد يوم الزواج`}${Progress.endingOpen() ? " · النهاية مفتوحة" : ""}</p></div>
+        <div class="hh-count"><b>${d > 0 ? "لموعد الزفاف" : "يوم الزفاف"}</b>${countdown}</div>
+        <div><div class="prog" aria-label="${done} من ${N} محطة"><i style="width:${done / N * 100}%"></i></div><p class="note" style="margin:6px 0 0">${done ? `خلصتوا ${numSpan(done)} من ${numSpan(N)} محطة` : `${numSpan(N)} محطة من أول صدفة لحد موعد الزفاف`}${Progress.endingOpen() ? " · «كلمة من عدول» انفتحت" : ""}</p></div>
         <div class="row"><button class="btn gold" data-go style="flex:1">${next ? (done ? `كمّلوا: ${esc(next.title)}` : "ابدأوا الحكاية") : "إعادة عيش الحكاية"}</button><button class="btn line" data-map>${IC.map} المحطات</button></div>
         <div class="hh-links">
           <a class="hh-link" href="#games">${IC.games}<span>عالم الألعاب</span><small>${Progress.coreWon()} من ${CONFIG.coreGames.length} أساسية</small></a>

@@ -8,6 +8,7 @@
 const StoryEngine = (() => {
   const DEF = { done: {}, cp: {}, choices: {}, items: {}, endingSeen: false, endingSaved: false };
   let SV = null;
+  let carryAuto = false;   // العرض التلقائي يكمل للمحطة/الفصل الجاي
   const save = () => Store.set("story", SV);
   function init() { SV = Object.assign(JSON.parse(JSON.stringify(DEF)), Store.get("story", {})); }
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -45,11 +46,11 @@ const StoryEngine = (() => {
     };
     const v = h(`<section class="view page sm-page noselect">
       <div class="page-inner">
-        <header class="page-head"><div><h1>طريق الحكاية</h1><p class="page-sub">إحدى عشرة محطة، من أول صدفة بالقصر الروماني لحد يوم الزواج. كل محطة مكان تمشون بيه وتلمسون تفاصيله.</p></div>
+        <header class="page-head"><div><h1>طريق الحكاية</h1><p class="page-sub">${numSpan(L.length)} محطة، من أول صدفة بالقصر الروماني لحد موعد الزفاف المنتظر. كل محطة مكان تمشون بيه وتلمسون تفاصيله.</p></div>
           <div class="row"><button class="btn ghost sm" data-set>${IC.gear} الإعدادات</button></div></header>
         <div class="sm-prog"><div class="prog"><i style="width:${doneN / L.length * 100}%"></i></div><span>${numSpan(doneN)} من ${numSpan(L.length)}</span></div>
         <ol class="sm-path">${L.map(node).join("")}
-          <li class="sm-node end ${endOpen ? "" : "locked"}"><button class="sm-btn" data-end aria-label="النهاية${endOpen ? "" : " — مقفولة"}"><span class="sm-medal adool">${endOpen ? `<img src="${TRig.still("adool")}" alt="">` : IC.lock}</span><span class="sm-txt"><small class="sm-date">بعد الرحلة</small><b>${endOpen ? "النهاية" : "النهاية مسكّرة"}</b><span>${endOpen ? "أحد يريد يگول شي…" : `تنفتح بعد كل المحطات${prefs.openAll ? "" : " والألعاب الأساسية الثلاث"}`}</span></span></button></li>
+          <li class="sm-node end ${endOpen ? "" : "locked"}"><button class="sm-btn" data-end aria-label="${esc(HIKAYAT.ending.title)}${endOpen ? "" : " — مقفول"}"><span class="sm-medal adool">${endOpen ? IC.heart : IC.lock}</span><span class="sm-txt"><small class="sm-date">${esc(HIKAYAT.ending.dateLabel)}</small><b>${esc(HIKAYAT.ending.title)}</b><span>${endOpen ? "أحد يريد يگول شي…" : "ينفتح بعد ما تخلص كل المحطات"}</span></span></button></li>
         </ol>
       </div></section>`);
     root.appendChild(v);
@@ -282,7 +283,7 @@ const StoryEngine = (() => {
     /* ----- مؤثرات المشهد ----- */
     async function doFx(name, arg) {
       const f = HIKAYAT.fx[name];
-      if (f) return f({ v, stage, L, chars, getObj, updObj, deco, ctx, TAudio, wait, emote, bark, motionOK, sc, SV, camX: cam, VW, U, toastIn, fxL }, arg);
+      if (f) return f({ v, stage, L, chars, getObj, updObj, deco, ctx, TAudio, wait, emote, bark, motionOK, sc, SV, camX: cam, VW, U, toastIn, fxL, auto }, arg);
     }
     function toastIn(t, ms = 2200) { toastEl.textContent = fill(t, ctx); toastEl.hidden = false; toastEl.classList.remove("in"); void toastEl.offsetWidth; toastEl.classList.add("in"); clearTimeout(toastEl._t); toastEl._t = setTimeout(() => toastEl.hidden = true, ms); }
 
@@ -480,6 +481,14 @@ const StoryEngine = (() => {
     function chapterEnd() {
       const Ls = list(), i = Ls.findIndex(s => s.id === chap.id), nx = Ls[i + 1];
       const endNow = !nx && Progress.endingOpen();
+      // آخر محطة وكل المحطات خلصت: انتقال ناعم مباشرة لفصل «كلمة من عدول» (بدون بطاقة نهاية بالنص)
+      if (endNow) {
+        mode = "end"; music("emotion");
+        const veil = h(`<div class="tp-trans" role="status"><small>فصل إضافي</small><b>${esc(HIKAYAT.ending.title)}</b></div>`);
+        v.appendChild(veil); requestAnimationFrame(() => veil.classList.add("in"));
+        setTimeout(() => { if (current === "story:" + chap.id) { carryAuto = auto; go("ending"); } }, motionOK() ? 2600 : 900);
+        return;
+      }
       music("emotion"); mode = "end"; over.hidden = false; v.classList.add("overlay");
       const card = h(`<div class="tp-card tp-end"><span class="tp-seal">${TART.symbol(chap.icon || "heart", "#E7CB8E")}</span><h3>${esc(chap.title)}</h3><p class="tp-cliff">${esc(fill(chap.cliff || "", ctx))}</p>
         ${nx ? `<div class="tp-next"><small>المحطة الجاية · ${esc(nx.dateLabel)}</small><b>${esc(nx.title)}</b><span>${esc(nx.place)}</span></div>` : endNow ? `<div class="tp-next"><b>خلصت الرحلة</b><span>بس أحد يريد يگول شي قبل لا تطلعون…</span></div>` : `<div class="tp-next"><b>خلصت المحطات</b><span>${Progress.stationsDone() < Ls.length ? "باقي محطات ما خلصت بالطريق." : `النهاية تنفتح بعد الألعاب الأساسية (${Progress.coreWon()} من ${CONFIG.coreGames.length}) — أو فعّلوا «إتاحة الحكاية كاملة».`}</span></div>`}
@@ -491,7 +500,7 @@ const StoryEngine = (() => {
       const g = $("[data-games]", card); if (g) g.onclick = () => go("games");
       $("[data-again]", card).onclick = () => go("story:" + chap.id, false);
       $("[data-map]", card).onclick = () => go("story");
-      if (auto && nx) setTimeout(() => { if (current === "story:" + chap.id) go("story:" + nx.id); }, 6000);
+      if (auto && nx) setTimeout(() => { if (current === "story:" + chap.id) { carryAuto = true; go("story:" + nx.id); } }, 6000);
     }
 
     /* ----- إيقاف مؤقت وصوت ----- */
@@ -552,6 +561,8 @@ const StoryEngine = (() => {
       if (k === "skip") { const f = skipFn || (mode === "explore" ? exploreSkip : null); if (f) { TAudio.sfx("page"); f(); } }
     });
 
+    if (carryAuto) { carryAuto = false; setTimeout(() => { const ab = $('.tp-hud [data-h="auto"]', v); if (ab && !auto) ab.click(); }, 300); }
+
     // لما يتفعّل العرض التلقائي بنص خطوة: كمّل الشي اللي ينتظر
     function kickAuto() {
       if (!auto || paused) return;
@@ -596,16 +607,13 @@ const StoryEngine = (() => {
     init();
     if (!Progress.endingOpen()) {
       const left = list().filter(s => !SV.done[s.id]);
-      const needG = prefs.openAll ? 0 : CONFIG.coreGames.length - Progress.coreWon();
       const v = h(`<section class="view page noselect"><div class="page-inner"><div class="card end-lock">
-        <span class="el-ic">${IC.lock}</span><h1>النهاية بعدها مسكّرة</h1>
-        <p>تنفتح بس بعد ما تكملون الرحلة كاملة${prefs.openAll ? "" : " والألعاب الأساسية الثلاث"}.</p>
-        <ul>${left.length ? `<li>باقي ${numSpan(left.length)} ${left.length === 1 ? "محطة" : "محطات"}: ${left.map(s => esc(s.title)).join("، ")}</li>` : `<li>كل المحطات خلصت ✓</li>`}${prefs.openAll ? "" : `<li>${needG ? `باقي ${numSpan(needG)} من الألعاب الأساسية (${CONFIG.coreGames.map(g => esc(Games.title(g))).join("، ")})` : "الألعاب الأساسية خلصت ✓"}</li>`}</ul>
-        <div class="row center"><button class="btn gold" data-story>طريق الحكاية</button>${needG ? `<button class="btn line" data-games>عالم الألعاب</button>` : ""}</div>
-        <p class="note">تگدرون تفعّلون «إتاحة الحكاية كاملة» من الإعدادات حتى ما تحتاجون الفوز بالألعاب. المحطات لازم تخلص.</p></div></div></section>`);
+        <span class="el-ic">${IC.lock}</span><h1>«${esc(HIKAYAT.ending.title)}» بعده مسكّر</h1>
+        <p>هذا فصل إضافي، ينفتح بس بعد ما تكملون حكاية عيسى وآمنة للنهاية.</p>
+        <ul><li>باقي ${numSpan(left.length)} ${left.length === 1 ? "محطة" : "محطات"}: ${left.map(s => esc(s.title)).join("، ")}</li></ul>
+        <div class="row center"><button class="btn gold" data-story>طريق الحكاية</button></div></div></div></section>`);
       root.appendChild(v);
       $("[data-story]", v).onclick = () => go("story");
-      const g = $("[data-games]", v); if (g) g.onclick = () => go("games");
       return;
     }
     const chap = HIKAYAT.ending;

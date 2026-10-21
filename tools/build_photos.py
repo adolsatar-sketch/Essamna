@@ -8,7 +8,7 @@ from photos_manifest import P, EXCLUDED, ROTATE
 
 src, root = sys.argv[1], sys.argv[2]
 out = os.path.join(root, "assets", "photos"); os.makedirs(out, exist_ok=True)
-STATIONS = {"palace":"القصر الروماني","story":"ستوري العرسان","valentine":"أول عيد حب","cinema":"أول سينما","isabday":"عيد ميلاد عيسى","court":"عقد المحكمة","keys":"مفتاح الشقة","furniture":"الأثاث","amnabday":"عيد ميلاد آمنة","suit":"البدلة","wedding":"الزواج"}
+STATIONS = {"palace":"القصر الروماني","story":"ستوري العرسان","engagement":"يوم خطوبتهم","valentine":"أول عيد حب","cinema":"أول سينما","isabday":"عيد ميلاد عيسى","court":"عقد المحكمة","keys":"مفتاح الشقة","furniture":"الأثاث","amnabday":"عيد ميلاد آمنة","suit":"البدلة","wedding":"يوم الزفاف — الموعد المنتظر"}
 cat = []
 rows = []
 for (pid, pre, title, date, sort, tag, station, desc, conf) in P:

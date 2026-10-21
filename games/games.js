@@ -48,12 +48,11 @@ const Games = (() => {
       const isCore = CONFIG.coreGames.includes(g.id);
       $(".wg-card", endOv).innerHTML = `${won ? `<div class="wg-stars">${[1, 2, 3].map(i => `<span class="${i <= stars ? "on" : ""}">${IC.star}</span>`).join("")}</div>` : ""}<h3>${esc(msg || (won ? "فزتوا!" : "قريبة!"))}</h3>
         ${score != null && g.bestLabel ? `<p>${esc(g.bestLabel(score))}${r.newBest ? " — أحسن نتيجة إلكم!" : r.best != null ? ` · الأحسن: ${esc(g.bestLabel(r.best))}` : ""}</p>` : ""}
-        ${won && isCore ? `<p class="note">${Progress.coreWon()} من ${CONFIG.coreGames.length} ألعاب أساسية${Progress.endingOpen() ? " — النهاية انفتحت!" : ""}</p>` : ""}
-        <button class="btn gold" data-again>${IC.restart} مرة ثانية</button>${g.levels ? `<button class="btn line sm" data-lvl>غيّروا الصعوبة</button>` : ""}${Progress.endingOpen() && won && isCore ? `<button class="btn line sm" data-end2>النهاية</button>` : ""}<button class="btn line sm" data-gback2>عالم الألعاب</button>`;
+        ${won && isCore ? `<p class="note">${Progress.coreWon()} من ${CONFIG.coreGames.length} ألعاب أساسية</p>` : ""}
+        <button class="btn gold" data-again>${IC.restart} مرة ثانية</button>${g.levels ? `<button class="btn line sm" data-lvl>غيّروا الصعوبة</button>` : ""}<button class="btn line sm" data-gback2>عالم الألعاب</button>`;
       endOv.hidden = false;
       $("[data-again]", endOv).onclick = start;
       const lv = $("[data-lvl]", endOv); if (lv) lv.onclick = () => { endOv.hidden = true; intro.hidden = false; };
-      const e2 = $("[data-end2]", endOv); if (e2) e2.onclick = () => go("ending");
       $("[data-gback2]", endOv).onclick = opts.back;
     }
     $("[data-start]", wrap).onclick = start;
@@ -172,7 +171,8 @@ const Games = (() => {
     { q: "شوكت استلموا مفتاح الشقة؟", o: ["10/5/2026", "20/6/2026", "7/10/2026"], a: 0 },
     { q: "كيكة عيد ميلاد آمنة الثاني چانت بأي ورد؟", o: ["دوّار الشمس", "جوري أحمر", "ياسمين"], a: 0 },
     { q: "شوكت اختاروا البدلة؟", o: ["7/10/2026", "24/9/2026", "30/10/2026"], a: 0 },
-    { q: "شوكت موعد الزواج؟", o: ["30/10/2026", "7/10/2026", "24/9/2026"], a: 0 },
+    { q: "شوكت خطوبتهم؟", o: ["14/2/2026", "13/2/2026", "22/4/2026"], a: 1 },
+    { q: "شوكت موعد الزفاف المنتظر؟", o: ["30/10/2026", "7/10/2026", "24/9/2026"], a: 0 },
     { q: "بأي كلمة يسمّون بعض برسائلهم؟", o: ["عوضي", "قمري", "دنيتي فقط"], a: 0 }
   ];
   G.quiz = { id: "quiz", title: "شنو تتذكرون؟", sub: "أسئلة من حكايتكم", core: false, color: ["#3E4E6A", "#B898A7"], icon: "letter",
@@ -212,7 +212,7 @@ const Games = (() => {
   function viewWorld(root) {
     const R = rec(), c = Progress.coreWon();
     const v = h(`<section class="view page gw-page noselect"><div class="page-inner">
-      <header class="page-head"><div><h1>عالم الألعاب</h1><p class="page-sub">خمس أجنحة، كل جناح لعبة مصممة من حكايتكم. الألعاب الأساسية الثلاث، ويا كل المحطات، تفتح النهاية.</p></div></header>
+      <header class="page-head"><div><h1>عالم الألعاب</h1><p class="page-sub">خمس أجنحة، كل جناح لعبة مصممة من حكايتكم. الألعاب الأساسية الثلاث تنحسب نجوم بعالم الألعاب.</p></div></header>
       <div class="gw-prog"><span class="gw-stars">${CONFIG.coreGames.map(g => `<i class="${R[g] && R[g].won ? "on" : ""}">${IC.star}</i>`).join("")}</span><span>${c} من ${CONFIG.coreGames.length} أساسية · ${Progress.stationsDone()} من ${HIKAYAT.stations.length} محطة${prefs.openAll ? " · «إتاحة الحكاية كاملة» مفعّلة" : ""}</span></div>
       <div class="gw-wings">${ORDER.map(id => { const g = G[id], s = R[id]; return `<button class="gw-wing" data-g="${id}" style="--c1:${g.color[0]};--c2:${g.color[1]}">
         <span class="gw-art">${TART.symbol(g.icon, "#FBF3E2")}</span><span class="gw-badge ${s && s.won ? "won" : ""}">${s && s.won ? "فزتوا ✦" : g.core ? "أساسية" : "إضافية"}</span>

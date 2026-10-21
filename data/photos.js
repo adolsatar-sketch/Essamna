@@ -46,7 +46,7 @@ const PHOTOS = [
 "d": "13 فبراير 2026",
 "s": "2026-02-13",
 "tag": "مناسباتنا",
-"st": "valentine",
+"st": "engagement",
 "desc": "إطار بيه آية «وخلقناكم أزواجاً» واسم Eisa و Amna، ومكتوب «لقد تم العقد… بتاريخ 13 فبراير 2026».",
 "ar": 0.6663
 },
@@ -56,7 +56,7 @@ const PHOTOS = [
 "d": null,
 "s": null,
 "tag": "صورنا",
-"st": "valentine",
+"st": "engagement",
 "desc": "إيدين بخواتم فوق باقة ورد مكتوب عليها «انا فعلاً عرفت اختار».",
 "ar": 0.6663
 },
@@ -256,8 +256,8 @@ const PHOTOS = [
 "d": null,
 "s": null,
 "tag": "احتفالاتنا",
-"st": "wedding",
-"desc": "عرسان واقفين قدّام ألعاب نارية حمرة.",
+"st": "engagement",
+"desc": "عيسى وآمنة واقفين قدّام ألعاب نارية حمرة.",
 "ar": 1.7778
 },
 {
@@ -266,8 +266,8 @@ const PHOTOS = [
 "d": null,
 "s": null,
 "tag": "احتفالاتنا",
-"st": "wedding",
-"desc": "عرسان وسط نافورات نار.",
+"st": "engagement",
+"desc": "عيسى وآمنة وسط نافورات نار.",
 "ar": 1.7778
 },
 {
@@ -276,7 +276,7 @@ const PHOTOS = [
 "d": null,
 "s": null,
 "tag": "احتفالاتنا",
-"st": "wedding",
+"st": "engagement",
 "desc": "ألعاب نارية فوق ساحة وناس.",
 "ar": 1.7778
 },
@@ -286,7 +286,7 @@ const PHOTOS = [
 "d": null,
 "s": null,
 "tag": "صورنا",
-"st": "wedding",
+"st": null,
 "desc": "عيسى ببدلة بيج وآمنة بالأبيض بحديقة.",
 "ar": 0.6675
 },
@@ -296,7 +296,7 @@ const PHOTOS = [
 "d": null,
 "s": null,
 "tag": "صورنا",
-"st": "wedding",
+"st": null,
 "desc": "عيسى واقف وآمنة ماسكة ورد أحمر.",
 "ar": 0.6675
 },
@@ -306,7 +306,7 @@ const PHOTOS = [
 "d": null,
 "s": null,
 "tag": "صورنا",
-"st": "wedding",
+"st": null,
 "desc": "عيسى وآمنة تحت شجرة كبيرة.",
 "ar": 0.6675
 },
@@ -316,7 +316,7 @@ const PHOTOS = [
 "d": null,
 "s": null,
 "tag": "صورنا",
-"st": "wedding",
+"st": null,
 "desc": "لقطة أبيض وأسود عند الشجرة.",
 "ar": 0.6675
 },
@@ -326,7 +326,7 @@ const PHOTOS = [
 "d": null,
 "s": null,
 "tag": "صورنا",
-"st": "wedding",
+"st": null,
 "desc": "يرقصون بالحديقة وقت الغروب.",
 "ar": 0.6675
 },
@@ -336,7 +336,7 @@ const PHOTOS = [
 "d": null,
 "s": null,
 "tag": "صورنا",
-"st": "wedding",
+"st": null,
 "desc": "عيسى راكع وبإيده علبة خاتم، وآمنة متفاجئة قرب الماي.",
 "ar": 0.6675
 },
